@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import './Login.css'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -21,7 +22,6 @@ export default function Login() {
       const data = await resposta.json()
 
       if (resposta.ok) {
-        // Redirigeix segons el rol
         navigate(`/${data.rol}`)
       } else {
         setError(data.error || 'Error de connexió')
@@ -32,20 +32,34 @@ export default function Login() {
   }
 
   return (
-    <div className="container mt-5">
-      <h2>Iniciar sessió</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="email" className="form-control my-2" placeholder="Correu"
-          value={email} onChange={e => setEmail(e.target.value)} />
-        <input type="password" className="form-control my-2" placeholder="Contrasenya"
-          value={contrasenya} onChange={e => setContrasenya(e.target.value)} />
-        {error && <div className="text-danger">{error}</div>}
-        <button className="btn btn-primary">Entrar</button>
-      </form>
-      <p className="mt-3">
-        Encara no tens compte? <a href="/register">Registra't</a>
-      </p>
-
+    <div className="login-container">
+      <div className="login-card">
+        <img src="/logo.png" alt="Logo MoodTunes" className="login-logo" />
+        <h1 className="login-title">Benvingut a <br />MoodTunes</h1>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            className="login-input"
+            placeholder="Usuari"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            className="login-input"
+            placeholder="Contrasenya"
+            value={contrasenya}
+            onChange={(e) => setContrasenya(e.target.value)}
+          />
+          {error && <div className="login-error">{error}</div>}
+          <button type="submit" className="login-btn">Inicia la sessió</button>
+        </form>
+        <a href="#" className="login-link">Recuperar la contrasenya</a>
+        <div className="login-register">
+          <span>No tens un compte?</span>
+          <a href="/register" className="register-link">Crear-ne una</a>
+        </div>
+      </div>
     </div>
   )
 }
