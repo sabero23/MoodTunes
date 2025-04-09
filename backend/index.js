@@ -56,4 +56,5 @@ app.post('/register', async (req, res) => {
   }
 })
 
-app.listen(4000, () => console.log('Backend escoltant al port 4000'))
+app.listen(4000, '0.0.0.0', () => console.log('Backend escoltant al port 4000'))
+

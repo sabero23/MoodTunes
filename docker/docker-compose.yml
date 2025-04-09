@@ -37,6 +37,17 @@ services:
       PMA_HOST: db
       MYSQL_ROOT_PASSWORD: DieSam2025!
 
+  frontend:
+    build: ../web
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../web:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://10.102.0.15:4000
 
 volumes:
   mysql_data:
