@@ -1,118 +1,145 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  String email = '';
+  String nom = '';
+  String contrasenya = '';
+  String rol = 'standard';
+  String error = '';
+
+  Future<void> registrarUsuari() async {
+    final url = Uri.parse('http://10.0.2.2:4000/register');
+    try {
+      final resposta = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'nom': nom,
+          'contrasenya': contrasenya,
+          'rol': rol,
+        }),
+      );
+
+      final data = jsonDecode(resposta.body);
+
+      if (resposta.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Compte creat correctament')),
+        );
+        Navigator.pushReplacementNamed(context, '/login');
+      } else {
+        setState(() {
+          error = data['error'] ?? 'Error desconegut';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        error = 'Error de connexió amb el servidor';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF3C5A7C),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/logo.png',
-                height: 80,
-              ),
-              const SizedBox(height: 40),
-              Text(
-                'Benvingut a\nMoodTunes',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+      backgroundColor: const Color(0xFF42658D),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image.asset('assets/logo.png', height: 80),
+                const SizedBox(height: 20),
+                Text(
+                  'Crear un nou compte',
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 40),
-              const CustomTextField(label: 'Usuari'),
-              const SizedBox(height: 16),
-              const CustomTextField(label: 'Contrasenya', isPassword: true),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+                  child: const Text(
+                    'Ja creat? Inicia la sessió',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                buildTextField('Usuari', (v) => setState(() => nom = v)),
+                buildTextField('Contrasenya', (v) => setState(() => contrasenya = v), isPassword: true),
+                buildTextField('Correu electrònic', (v) => setState(() => email = v)),
+                const SizedBox(height: 10),
+                DropdownButton<String>(
+                  value: rol,
+                  dropdownColor: Colors.blue[200],
+                  items: const [
+                    DropdownMenuItem(value: 'standard', child: Text('Standard')),
+                    DropdownMenuItem(value: 'premium', child: Text('Premium')),
+                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                  ],
+                  onChanged: (value) => setState(() => rol = value!),
+                ),
+                const SizedBox(height: 10),
+                if (error.isNotEmpty)
+                  Text(error, style: const TextStyle(color: Colors.redAccent)),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: registrarUsuari,
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: const Color(0xFF3C5A7C),
                     backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    elevation: 8,
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    elevation: 10,
                   ),
-                  onPressed: () {},
-                  child: Text(
-                    'Inicia la sessió',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-                  ),
+                  child: const Text('Crear el compte'),
                 ),
-              ),
-              const SizedBox(height: 20),
-              TextButton(
-                onPressed: () {},
-                child: Text(
-                  'Recuperar la contrasenya',
-                  style: GoogleFonts.inter(color: Colors.white),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'No tens un compte?',
-                    style: GoogleFonts.inter(color: Colors.white),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/register');
-                    },
-                    child: Text(
-                      'Crear-ne una',
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-}
 
-class CustomTextField extends StatelessWidget {
-  final String label;
-  final bool isPassword;
-
-  const CustomTextField({super.key, required this.label, this.isPassword = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      obscureText: isPassword,
-      style: const TextStyle(color: Colors.white),
-      cursorColor: Colors.white,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.white),
+  Widget buildTextField(String label, Function(String) onChanged, {bool isPassword = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          style: const TextStyle(color: Colors.white),
+          obscureText: isPassword,
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: const TextStyle(color: Colors.white70),
+            enabledBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white70),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+          ),
+          onChanged: onChanged,
         ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.white),
-        ),
-      ),
+        const SizedBox(height: 15),
+      ],
     );
   }
 }
