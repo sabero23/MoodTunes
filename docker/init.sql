@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS usuari (
+CREATE TABLE IF NOT EXISTS usuaris (
   email VARCHAR(100) PRIMARY KEY,
   nom VARCHAR(100),
   contrasenya VARCHAR(255) NOT NULL,
@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS usuari (
   creat_el TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Crear usuari admin per defecte (contrasenya hash dummy per ara)
-INSERT INTO usuari (email, nom, contrasenya, rol)
-VALUES ('admin@moodtunes.com', 'Admin', 'admin123', 'admin')
+INSERT INTO usuaris (email, nom, contrasenya, rol)
+VALUES ('admin@moodtunes.com', 'Admin', 'DieSam2025!', 'admin')
 ON DUPLICATE KEY UPDATE email=email;

@@ -10,7 +10,7 @@ services:
     environment:
       - DB_HOST=db
       - DB_PORT=3306
-      - DB_USER=admin
+      - DB_USER=root
       - DB_PASSWORD=DieSam2025!
       - DB_NAME=moodtunes
 
@@ -29,11 +29,14 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     restart: always
+    depends_on:
+      - db
     ports:
       - "8080:80"
     environment:
       PMA_HOST: db
       MYSQL_ROOT_PASSWORD: DieSam2025!
+
 
 volumes:
   mysql_data:

@@ -8,6 +8,7 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+// Connexió a MySQL
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -16,13 +17,43 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME
 })
 
-app.get('/', async (req, res) => {
+// Ruta test
+app.get('/', (req, res) => res.send('Backend MoodTunes OK'))
+
+// LOGIN
+app.post('/login', async (req, res) => {
+  const { email, contrasenya } = req.body
   try {
-    const [rows] = await pool.query('SELECT NOW() as hora')
-    res.json({ status: 'ok', hora: rows[0].hora })
+    const [rows] = await pool.query(
+      'SELECT rol FROM usuaris WHERE email = ? AND contrasenya = ?',
+      [email, contrasenya]
+    )
+    if (rows.length === 1) {
+      res.json({ ok: true, rol: rows[0].rol })
+    } else {
+      res.status(401).json({ ok: false, error: 'Credencials incorrectes' })
+    }
   } catch (err) {
-    res.status(500).json({ error: 'Error de connexió a la base de dades' })
+    res.status(500).json({ error: 'Error al fer login', detalls: err.message })
   }
 })
 
-app.listen(4000, () => console.log('✅ Backend escoltant al port 4000'))
+// REGISTER
+app.post('/register', async (req, res) => {
+  const { email, nom, contrasenya, rol } = req.body
+  try {
+    await pool.query(
+      'INSERT INTO usuaris (email, nom, contrasenya, rol) VALUES (?, ?, ?, ?)',
+      [email, nom, contrasenya, rol]
+    )
+    res.status(201).json({ ok: true, missatge: 'Usuari registrat correctament' })
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      res.status(409).json({ ok: false, error: 'Ja existeix un usuari amb aquest correu' })
+    } else {
+      res.status(500).json({ error: 'Error al registrar', detalls: err.message })
+    }
+  }
+})
+
+app.listen(4000, () => console.log('Backend escoltant al port 4000'))
