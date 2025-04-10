@@ -1,11 +1,15 @@
-CREATE TABLE IF NOT EXISTS usuaris (
-  email VARCHAR(100) PRIMARY KEY,
-  nom VARCHAR(100),
-  contrasenya VARCHAR(255) NOT NULL,
-  rol ENUM('admin', 'standard', 'premium') DEFAULT 'standard',
-  creat_el TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+DROP TABLE IF EXISTS usuaris;
+
+CREATE TABLE usuaris (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  nom VARCHAR(100) NOT NULL,
+  contrasenya VARCHAR(100) NOT NULL,
+  rol ENUM('standard', 'premium') DEFAULT 'standard',
+  data_naixement DATE
 );
 
-INSERT INTO usuaris (email, nom, contrasenya, rol)
-VALUES ('admin@moodtunes.com', 'Admin', 'DieSam2025!', 'admin')
-ON DUPLICATE KEY UPDATE email=email;
+-- Inserció d'usuari per defecte per provar (opcional)
+INSERT INTO usuaris (email, nom, contrasenya, rol, data_naixement)
+VALUES ('admin@moodtunes.com', 'Admin', '1234', 'premium', '2005-12-28');

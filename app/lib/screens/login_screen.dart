@@ -3,44 +3,38 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   String email = '';
-  String nom = '';
   String contrasenya = '';
-  String rol = 'standard';
   String error = '';
+  bool showPassword = false;
 
-  Future<void> registrarUsuari() async {
-    final url = Uri.parse('http://10.0.2.2:4000/register');
+  Future<void> iniciarSessio() async {
+    final url = Uri.parse('http://10.0.2.2:4000/login');
     try {
       final resposta = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': email,
-          'nom': nom,
           'contrasenya': contrasenya,
-          'rol': rol,
         }),
       );
 
       final data = jsonDecode(resposta.body);
 
-      if (resposta.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Compte creat correctament')),
-        );
-        Navigator.pushReplacementNamed(context, '/login');
+      if (resposta.statusCode == 200 && data['rol'] != null) {
+        Navigator.pushReplacementNamed(context, '/${data['rol']}');
       } else {
         setState(() {
-          error = data['error'] ?? 'Error desconegut';
+          error = data['error'] ?? 'Credencials incorrectes';
         });
       }
     } catch (e) {
@@ -64,52 +58,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Image.asset('assets/logo.png', height: 80),
                 const SizedBox(height: 20),
                 Text(
-                  'Crear un nou compte',
+                  'Benvingut a MoodTunes',
                   style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                  child: const Text(
-                    'Ja creat? Inicia la sessió',
-                    style: TextStyle(color: Colors.white70),
-                  ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 30),
-                buildTextField('Usuari', (v) => setState(() => nom = v)),
-                buildTextField('Contrasenya', (v) => setState(() => contrasenya = v), isPassword: true),
                 buildTextField('Correu electrònic', (v) => setState(() => email = v)),
-                const SizedBox(height: 10),
-                DropdownButton<String>(
-                  value: rol,
-                  dropdownColor: Colors.blue[200],
-                  items: const [
-                    DropdownMenuItem(value: 'standard', child: Text('Standard')),
-                    DropdownMenuItem(value: 'premium', child: Text('Premium')),
-                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                  ],
-                  onChanged: (value) => setState(() => rol = value!),
-                ),
+                buildTextField('Contrasenya', (v) => setState(() => contrasenya = v), isPassword: true),
                 const SizedBox(height: 10),
                 if (error.isNotEmpty)
                   Text(error, style: const TextStyle(color: Colors.redAccent)),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: registrarUsuari,
+                  onPressed: iniciarSessio,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
+                    foregroundColor: const Color(0xFF42658D),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                     elevation: 10,
                   ),
-                  child: const Text('Crear el compte'),
+                  child: Text(
+                    'Inicia la sessió',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'No tens un compte?',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pushReplacementNamed(context, '/register'),
+                      child: Text(
+                        "Registra't",
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -125,7 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       children: [
         TextField(
           style: const TextStyle(color: Colors.white),
-          obscureText: isPassword,
+          obscureText: isPassword ? !showPassword : false,
           decoration: InputDecoration(
             labelText: label,
             labelStyle: const TextStyle(color: Colors.white70),
@@ -135,6 +137,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             focusedBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.white),
             ),
+            suffixIcon: isPassword
+                ? IconButton(
+                    icon: Icon(
+                      showPassword ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.white70,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        showPassword = !showPassword;
+                      });
+                    },
+                  )
+                : null,
           ),
           onChanged: onChanged,
         ),

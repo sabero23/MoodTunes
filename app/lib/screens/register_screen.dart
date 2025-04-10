@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,8 +15,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String email = '';
   String nom = '';
   String contrasenya = '';
+  DateTime? selectedDate;
   String rol = 'standard';
   String error = '';
+  bool showPassword = false;
+
+  String get formattedDate {
+    if (selectedDate == null) return '';
+    return DateFormat('yyyy-MM-dd').format(selectedDate!);
+  }
 
   Future<void> registrarUsuari() async {
     final url = Uri.parse('http://10.0.2.2:4000/register');
@@ -28,6 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'nom': nom,
           'contrasenya': contrasenya,
           'rol': rol,
+          'data_naixement': formattedDate,
         }),
       );
 
@@ -50,6 +59,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  Future<void> triarData(BuildContext context) async {
+    final DateTime? data = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (data != null) {
+      setState(() {
+        selectedDate = data;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,35 +88,83 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
                 Text(
                   'Crear un nou compte',
-                  style: GoogleFonts.getFont(
-                    'SF Pro Display',
+                  style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                  child: const Text(
-                    'Ja creat? Inicia la sessió',
-                    style: TextStyle(color: Colors.white70),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Ja creat?',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+                      child: Text(
+                        'Inicia la sessió',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 30),
                 buildTextField('Usuari', (v) => setState(() => nom = v)),
                 buildTextField('Contrasenya', (v) => setState(() => contrasenya = v), isPassword: true),
                 buildTextField('Correu electrònic', (v) => setState(() => email = v)),
-                const SizedBox(height: 10),
-                DropdownButton<String>(
-                  value: rol,
-                  dropdownColor: Colors.blue[200],
-                  items: const [
-                    DropdownMenuItem(value: 'standard', child: Text('Standard')),
-                    DropdownMenuItem(value: 'premium', child: Text('Premium')),
-                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                  ],
-                  onChanged: (value) => setState(() => rol = value!),
+                const SizedBox(height: 15),
+                GestureDetector(
+                  onTap: () => triarData(context),
+                  child: AbsorbPointer(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Data de naixement',
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        hintText: 'yyyy-mm-dd',
+                        hintStyle: const TextStyle(color: Colors.white38),
+                        enabledBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white70),
+                        ),
+                        focusedBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                      controller: TextEditingController(text: formattedDate),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    canvasColor: Colors.blue[200],
+                  ),
+                  child: DropdownButton<String>(
+                    value: rol,
+                    dropdownColor: Colors.blue[200],
+                    style: const TextStyle(color: Colors.white),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'standard',
+                        child: Text('Standard', style: TextStyle(color: Colors.white)),
+                      ),
+                      DropdownMenuItem(
+                        value: 'premium',
+                        child: Text('Premium', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                    onChanged: (value) => setState(() => rol = value!),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 if (error.isNotEmpty)
@@ -103,14 +174,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: registrarUsuari,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
+                    foregroundColor: const Color(0xFF42658D),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                     elevation: 10,
                   ),
-                  child: const Text('Crear el compte'),
+                  child: Text(
+                    'Crear el compte',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
@@ -126,7 +200,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       children: [
         TextField(
           style: const TextStyle(color: Colors.white),
-          obscureText: isPassword,
+          obscureText: isPassword ? !showPassword : false,
           decoration: InputDecoration(
             labelText: label,
             labelStyle: const TextStyle(color: Colors.white70),
@@ -136,6 +210,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             focusedBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.white),
             ),
+            suffixIcon: isPassword
+                ? IconButton(
+                    icon: Icon(
+                      showPassword ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.white70,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        showPassword = !showPassword;
+                      });
+                    },
+                  )
+                : null,
           ),
           onChanged: onChanged,
         ),
