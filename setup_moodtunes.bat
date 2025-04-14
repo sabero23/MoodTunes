@@ -65,6 +65,15 @@ IF %ERRORLEVEL% NEQ 0 (
 cd web
 echo 📦 Instal·lant dependències React...
 call npm install
+
+:: React-icons
+call npm list react-icons >nul 2>&1
+IF %ERRORLEVEL% NEQ 0 (
+    echo 🔧 Instal·lant react-icons...
+    call npm install react-icons
+) ELSE (
+    echo ✅ react-icons ja està instal·lat.
+)
 cd ..
 
 :: App (Flutter)
@@ -81,4 +90,3 @@ cd ..
 
 echo.
 echo ✅ MoodTunes operatiu! Pots executar ara Flutter amb: cd app && flutter run
-pause

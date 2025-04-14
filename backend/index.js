@@ -2,13 +2,13 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import mysql from 'mysql2/promise'
+import bcrypt from 'bcryptjs';
 
 dotenv.config()
 const app = express()
 app.use(cors())
 app.use(express.json())
 
-// Connexió a MySQL
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -17,18 +17,17 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME
 })
 
-// Ruta test
-app.get('/', (req, res) => res.send('Backend MoodTunes OK'))
-
 // LOGIN
 app.post('/login', async (req, res) => {
   const { email, contrasenya } = req.body
   try {
-    const [rows] = await pool.query(
-      'SELECT rol FROM usuaris WHERE email = ? AND contrasenya = ?',
-      [email, contrasenya]
-    )
-    if (rows.length === 1) {
+    const [rows] = await pool.query('SELECT contrasenya, rol FROM usuaris WHERE email = ?', [email])
+    if (rows.length === 0) {
+      return res.status(401).json({ ok: false, error: 'Credencials incorrectes' })
+    }
+
+    const valid = await bcrypt.compare(contrasenya, rows[0].contrasenya)
+    if (valid) {
       res.json({ ok: true, rol: rows[0].rol })
     } else {
       res.status(401).json({ ok: false, error: 'Credencials incorrectes' })
@@ -40,11 +39,12 @@ app.post('/login', async (req, res) => {
 
 // REGISTER
 app.post('/register', async (req, res) => {
-  const { email, nom, contrasenya, rol } = req.body
+  const { email, nom, contrasenya, rol, data_naixement } = req.body
   try {
+    const hash = await bcrypt.hash(contrasenya, 10)
     await pool.query(
-      'INSERT INTO usuaris (email, nom, contrasenya, rol) VALUES (?, ?, ?, ?)',
-      [email, nom, contrasenya, rol]
+      'INSERT INTO usuaris (email, nom, contrasenya, rol, data_naixement) VALUES (?, ?, ?, ?, ?)',
+      [email, nom, hash, rol, data_naixement]
     )
     res.status(201).json({ ok: true, missatge: 'Usuari registrat correctament' })
   } catch (err) {
@@ -56,5 +56,6 @@ app.post('/register', async (req, res) => {
   }
 })
 
-app.listen(4000, '0.0.0.0', () => console.log('Backend escoltant al port 4000'))
+app.get('/', (req, res) => res.send('Backend MoodTunes OK'))
 
+app.listen(4000, '0.0.0.0', () => console.log('Backend escoltant al port 4000'))
