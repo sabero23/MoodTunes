@@ -1,0 +1,23 @@
+.dashboard-container {
+    background: #f7f9fc;
+    min-height: 100vh;
+    padding-top: 70px; /* espai pel header */
+  }
+  
+  .dashboard-main {
+    padding: 40px;
+    text-align: center;
+  }
+  
+  .dashboard-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #3f5f86;
+    margin-bottom: 10px;
+  }
+  
+  .dashboard-subtitle {
+    font-size: 16px;
+    color: #555;
+  }
+  
