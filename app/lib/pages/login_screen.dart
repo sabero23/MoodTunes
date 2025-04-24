@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import '../utils/session.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,20 +18,23 @@ class _LoginScreenState extends State<LoginScreen> {
   bool showPassword = false;
 
   Future<void> iniciarSessio() async {
-    final url = Uri.parse('http://10.0.2.2:4000/login');
+    final url = Uri.parse('http://localhost:4000/login');
     try {
       final resposta = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'contrasenya': contrasenya,
-        }),
+        body: jsonEncode({'email': email, 'contrasenya': contrasenya}),
       );
 
       final data = jsonDecode(resposta.body);
 
       if (resposta.statusCode == 200 && data['rol'] != null) {
+        await SessionManager.saveSession(
+          data['token'],
+          email,
+          data['rol'],
+        );
+
         Navigator.pushReplacementNamed(context, '/${data['rol']}');
       } else {
         setState(() {

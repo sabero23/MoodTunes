@@ -26,7 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> registrarUsuari() async {
-    final url = Uri.parse('http://10.0.2.2:4000/register');
+    final url = Uri.parse('http://localhost:4000/register');
     try {
       final resposta = await http.post(
         url,
