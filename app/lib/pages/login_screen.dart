@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../utils/session.dart';
 
+/// Pantalla de Login para MoodTunes.
+/// Permite iniciar sesión, guarda la sesión del usuario y redirige según el rol.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -17,8 +19,10 @@ class _LoginScreenState extends State<LoginScreen> {
   String error = '';
   bool showPassword = false;
 
+  /// Función que realiza la petición al backend para iniciar sesión.
+  /// Si es correcto, guarda la sesión y redirige a la pantalla según el rol.
   Future<void> iniciarSessio() async {
-    final url = Uri.parse('http://localhost:4000/login');
+    final url = Uri.parse('http://localhost:4000/login'); //  Cambiar en producción si es necesario.
     try {
       final resposta = await http.post(
         url,
@@ -29,21 +33,23 @@ class _LoginScreenState extends State<LoginScreen> {
       final data = jsonDecode(resposta.body);
 
       if (resposta.statusCode == 200 && data['rol'] != null) {
+        //  Guarda la sesión con el token, email y rol del usuario.
         await SessionManager.saveSession(
           data['token'],
           email,
           data['rol'],
         );
 
+        //  Redirige automáticamente a la pantalla correspondiente según el rol.
         Navigator.pushReplacementNamed(context, '/${data['rol']}');
       } else {
         setState(() {
-          error = data['error'] ?? 'Credencials incorrectes';
+          error = data['error'] ?? 'Credenciales incorrectas';
         });
       }
     } catch (e) {
       setState(() {
-        error = 'Error de connexió amb el servidor';
+        error = 'Error de conexión con el servidor';
       });
     }
   }
@@ -62,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Image.asset('assets/logo.png', height: 80),
                 const SizedBox(height: 20),
                 Text(
-                  'Benvingut a MoodTunes',
+                  'Bienvenido a MoodTunes',
                   style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -71,8 +77,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 30),
-                buildTextField('Correu electrònic', (v) => setState(() => email = v)),
-                buildTextField('Contrasenya', (v) => setState(() => contrasenya = v), isPassword: true),
+                buildTextField('Correo electrónico', (v) => setState(() => email = v)),
+                buildTextField('Contraseña', (v) => setState(() => contrasenya = v), isPassword: true),
                 const SizedBox(height: 10),
                 if (error.isNotEmpty)
                   Text(error, style: const TextStyle(color: Colors.redAccent)),
@@ -89,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     elevation: 10,
                   ),
                   child: Text(
-                    'Inicia la sessió',
+                    'Iniciar sesión',
                     style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -98,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'No tens un compte?',
+                      '¿No tienes una cuenta?',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: Colors.white70,
@@ -107,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextButton(
                       onPressed: () => Navigator.pushReplacementNamed(context, '/register'),
                       child: Text(
-                        "Registra't",
+                        'Regístrate',
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -125,6 +131,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// Construye un campo de texto personalizado.
+  /// Soporta modo contraseña (ocultar/mostrar).
   Widget buildTextField(String label, Function(String) onChanged, {bool isPassword = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

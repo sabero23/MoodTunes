@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/session.dart';
 
+/// Componente Header reutilizable con saludo, pregunta y menú desplegable.
+/// Incluye lógica para cargar el nombre del usuario y cerrar sesión correctamente.
 class Header extends StatefulWidget implements PreferredSizeWidget {
   const Header({super.key});
 
   @override
   State<Header> createState() => _HeaderState();
 
+  /// Define la altura del header (barra superior).
   @override
   Size get preferredSize => const Size.fromHeight(80);
 }
@@ -18,34 +21,37 @@ class _HeaderState extends State<Header> {
   @override
   void initState() {
     super.initState();
-    _carregarNom();
+    _cargarNombreUsuario();
   }
 
-  Future<void> _carregarNom() async {
+  /// Carga el nombre del usuario desde la sesión y lo guarda en el estado.
+  Future<void> _cargarNombreUsuario() async {
     final nom = await SessionManager.getUserName();
     setState(() {
-      nomUsuari = nom ?? 'Usuari';
+      nomUsuari = nom ?? 'Usuari'; // Si no hay nombre guardado, usa 'Usuari' por defecto.
     });
   }
 
-  void _tancarSessio(BuildContext context) async {
+  /// Cierra la sesión eliminando los datos de SessionManager y redirige al login.
+  void _cerrarSesion(BuildContext context) async {
     await SessionManager.clearSession();
-    if (mounted) {
+    if (mounted) { // Comprobamos que el widget sigue montado antes de navegar.
       Navigator.pushReplacementNamed(context, '/login');
     }
   }
 
+  /// Construye el header visualmente.
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: const Color(0xFF42658D),
       elevation: 0,
-      automaticallyImplyLeading: false,
+      automaticallyImplyLeading: false, // Oculta el botón de volver atrás (si no es necesario).
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Benvingut, $nomUsuari 👋',
+            'Benvingut, $nomUsuari 👋', // Saludo personalizado.
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -54,7 +60,7 @@ class _HeaderState extends State<Header> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Com et sents avui?',
+            'Com et sents avui?', // Pregunta al usuario (el selector se implementará más adelante).
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: Colors.white70,
@@ -63,24 +69,26 @@ class _HeaderState extends State<Header> {
         ],
       ),
       actions: [
-        // 🔥 Placeholder del selector (després afegirem la funcionalitat real)
+        /// 🔜 Botón para el selector de estado de ánimo (funcionalidad pendiente).
         IconButton(
           icon: const Icon(Icons.mood, color: Colors.white),
           onPressed: () {
-            // Aquí pots obrir el selector d'estat d'ànim en el futur
+            // Aquí se implementará el selector de estado de ánimo más adelante.
           },
         ),
+
+        /// Menú desplegable con la opción de cerrar sesión.
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: Colors.white),
           onSelected: (value) {
             if (value == 'logout') {
-              _tancarSessio(context);
+              _cerrarSesion(context);
             }
           },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
+          itemBuilder: (context) => const [
+            PopupMenuItem(
               value: 'logout',
-              child: Text('Tanca sessió'),
+              child: Text('Tanca sessió'), // Texto del botón de cerrar sesión.
             ),
           ],
         ),

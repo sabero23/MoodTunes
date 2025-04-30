@@ -1,13 +1,18 @@
-import Header from "../components/Header";
+import Header from '../components/Header';
+import './RolePages.css';
 
 export default function AdminPage() {
-  const usuari = JSON.parse(localStorage.getItem("usuari"));
   return (
     <>
       <Header />
-      <div className="main-content">
-        <h2>Benvingut, {usuari.nom}</h2>
-        <p>Aquesta és la zona per a usuaris <strong>admin</strong>.</p>
+      <div className="page-container">
+        <h1 className="page-title">Bienvenido, administrador</h1>
+        <p className="page-subtitle">¿Cómo te sientes hoy?</p>
+        <div className="selector-placeholder">Selector de estado de ánimo (próximamente)</div>
+        <p className="extra-info">
+          Zona de administración: aquí podrás gestionar usuarios, consultar estadísticas u otras
+          funcionalidades exclusivas para administradores.
+        </p>
       </div>
     </>
   );

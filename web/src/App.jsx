@@ -6,6 +6,7 @@ import PremiumPage from './pages/PremiumPage';
 import StandardPage from './pages/StandardPage';
 import AccessDenied from './pages/AccessDenied';
 import { ToastContainer } from 'react-toastify';
+import Redir from './pages/Redir';
 import 'react-toastify/dist/ReactToastify.css';
 
 function ProtectedRoute({ element, allowedRoles }) {
@@ -36,6 +37,7 @@ function App() {
           path="/standard"
           element={<ProtectedRoute allowedRoles={['standard']} element={<StandardPage />} />}
         />
+        <Route path="/redir" element={<Redir />} />
       </Routes>
 
       <ToastContainer

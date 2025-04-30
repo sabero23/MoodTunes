@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/session_manager.dart';
 
+/// Pantalla principal para el usuario con rol Premium.
+/// Muestra mensaje de bienvenida, opciones de menú y espacio para futuras funcionalidades exclusivas.
 class PremiumScreen extends StatefulWidget {
   const PremiumScreen({super.key});
 
@@ -18,6 +20,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
     _loadUserData();
   }
 
+  /// Carga el nombre del usuario desde la sesión almacenada.
+  /// Si no se encuentra el nombre, utiliza 'Usuari' por defecto.
   Future<void> _loadUserData() async {
     final nom = await SessionManager.getUserName();
     setState(() {
@@ -25,6 +29,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
     });
   }
 
+  /// Función para cerrar sesión.
+  /// Limpia los datos de la sesión y redirige al login.
   void logout(BuildContext context) async {
     await SessionManager.clearSession();
     Navigator.pushReplacementNamed(context, '/login');
@@ -43,12 +49,12 @@ class _PremiumScreenState extends State<PremiumScreen> {
             icon: const Icon(Icons.menu, color: Colors.white),
             onSelected: (value) {
               if (value == 'logout') logout(context);
-              // Aquí podries afegir més opcions si vols.
+              // Aquí se pueden añadir más opciones si es necesario.
             },
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'reproductor', child: Text('Reproductor')),
               const PopupMenuItem(value: 'playlist', child: Text('Playlists')),
-              const PopupMenuItem(value: 'logout', child: Text('Tanca sessió')),
+              const PopupMenuItem(value: 'logout', child: Text('Cerrar sesión')),
             ],
             color: Colors.white,
           ),
@@ -60,7 +66,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Benvingut, $nomUsuari!',
+              'Bienvenido, $nomUsuari',
               style: GoogleFonts.poppins(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -69,7 +75,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Com et sents avui?',
+              '¿Cómo te sientes hoy?',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 color: Colors.white70,
@@ -83,13 +89,13 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
-                'Selector (aviat)',
+                'Selector (próximamente)',
                 style: TextStyle(color: Color(0xFF42658D)),
               ),
             ),
             const SizedBox(height: 30),
             Text(
-              'Zona Premium: Aquí pots posar contingut exclusiu, recomanacions especials o avantatges per als usuaris premium.',
+              'Zona Premium: Aquí se pueden añadir funcionalidades exclusivas, recomendaciones especiales o ventajas para los usuarios premium.',
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 color: Colors.white70,

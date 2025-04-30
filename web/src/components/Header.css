@@ -1,56 +1,62 @@
+/*  Estilos generales del header (barra superior de la aplicación) */
 header {
-    background-color: #3f5f86;
-    color: white;
-    padding: 10px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-  
-  .header-logo {
-    font-size: 22px;
-    font-weight: bold;
-  }
-  
-  .header-menu {
-    position: relative;
-  }
-  
-  .menu-toggle {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-  }
-  
-  .dropdown-menu {
-    position: absolute;
-    right: 0;
-    top: 35px;
-    background-color: white;
-    color: #3f5f86;
-    border-radius: 6px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 10px 0;
-    min-width: 150px;
-    z-index: 1000;
-  }
-  
-  .dropdown-menu button {
-    background: none;
-    border: none;
-    color: #3f5f86;
-    padding: 10px 20px;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    font-weight: 600;
-    font-family: 'SF Pro Display', sans-serif;
-  }
-  
-  .dropdown-menu button:hover {
-    background-color: #f0f0f0;
-  }
-  
+  background-color: #3f5f86; /* Color azul corporativo para el fondo del header */
+  color: white;             /* Texto en blanco para el header */
+  padding: 10px 30px;       /* Espaciado interno para separar el contenido de los bordes */
+  display: flex;            /* Flexbox para organizar el contenido horizontalmente */
+  justify-content: space-between; /* Espacio entre el logo y el menú desplegable */
+  align-items: center;      /* Alinear verticalmente los elementos al centro */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra sutil para dar profundidad */
+}
+
+/*  Estilo del logo del header */
+.header-logo {
+  font-size: 22px;          /* Tamaño del texto del logo */
+  font-weight: bold;        /* Negrita para destacar el nombre o logo */
+}
+
+/*  Contenedor del menú desplegable */
+.header-menu {
+  position: relative;       /* Necesario para posicionar el dropdown respecto a este contenedor */
+}
+
+/*  Botón para abrir/cerrar el menú (icono de tres puntos o hamburguesa) */
+.menu-toggle {
+  background: none;         /* Sin fondo para el botón */
+  border: none;             /* Sin bordes para el botón */
+  color: white;             /* Icono en blanco */
+  font-size: 24px;          /* Tamaño grande para el icono del menú */
+  cursor: pointer;          /* Cambia el cursor a pointer (mano) */
+}
+
+/*  Menú desplegable */
+.dropdown-menu {
+  position: absolute;       /* Posicionamiento absoluto respecto al contenedor */
+  right: 0;                 /* Alineado a la derecha del contenedor */
+  top: 35px;                /* Separado del botón superior */
+  background-color: white;  /* Fondo blanco para el menú */
+  color: #3f5f86;           /* Color de texto en azul corporativo */
+  border-radius: 6px;       /* Bordes redondeados */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para dar efecto de flotante */
+  padding: 10px 0;          /* Espaciado interno arriba y abajo */
+  min-width: 150px;         /* Ancho mínimo del menú */
+  z-index: 1000;            /* Asegura que esté por encima de otros elementos */
+}
+
+/*  Botones del menú desplegable */
+.dropdown-menu button {
+  background: none;         /* Sin fondo para los botones */
+  border: none;             /* Sin bordes */
+  color: #3f5f86;           /* Texto azul corporativo */
+  padding: 10px 20px;       /* Espaciado interno de los botones */
+  width: 100%;              /* Ocupa todo el ancho del menú */
+  text-align: left;         /* Alinea el texto a la izquierda */
+  cursor: pointer;          /* Cambia el cursor a pointer (mano) */
+  font-weight: 600;         /* Negrita para resaltar el texto */
+  font-family: 'SF Pro Display', sans-serif; /* Fuente personalizada */
+}
+
+/*  Efecto hover para los botones del menú */
+.dropdown-menu button:hover {
+  background-color: #f0f0f0; /* Cambio de color al pasar el ratón por encima */
+}

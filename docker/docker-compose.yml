@@ -1,4 +1,7 @@
+version: "3.8"
+
 services:
+  # Servicio BACKEND (Node.js + Express)
   backend:
     build: ../backend
     ports:
@@ -14,18 +17,20 @@ services:
       - DB_PASSWORD=DieSam2025!
       - DB_NAME=moodtunes
 
+  # Servicio BASE DE DATOS (MySQL)
   db:
     image: mysql:8
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: DieSam2025!
-      MYSQL_DATABASE: moodtunes
+      - MYSQL_ROOT_PASSWORD=DieSam2025!
+      - MYSQL_DATABASE=moodtunes
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  # Servicio PHPMyAdmin (gestión gráfica de MySQL)
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     restart: always
@@ -34,9 +39,10 @@ services:
     ports:
       - "8080:80"
     environment:
-      PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: DieSam2025!
+      - PMA_HOST=db
+      - MYSQL_ROOT_PASSWORD=DieSam2025!
 
+  # Servicio FRONTEND (Vite + React o similar)
   frontend:
     build: ../web
     ports:
@@ -47,7 +53,7 @@ services:
     depends_on:
       - backend
     environment:
-      - VITE_API_URL=http://10.102.0.15:4000
+      - VITE_API_URL=http://backend:4000
 
 volumes:
   mysql_data:

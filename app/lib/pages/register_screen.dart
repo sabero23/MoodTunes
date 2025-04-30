@@ -4,6 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
+/// Pantalla de registro de usuario.
+/// Permite introducir datos básicos: nombre, contraseña, email, rol y fecha de nacimiento.
+/// Envía los datos al backend para crear el usuario en la base de datos.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -20,11 +23,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String error = '';
   bool showPassword = false;
 
+  /// Formatea la fecha seleccionada a formato yyyy-MM-dd para enviarla al backend.
   String get formattedDate {
     if (selectedDate == null) return '';
     return DateFormat('yyyy-MM-dd').format(selectedDate!);
   }
 
+  /// Función que realiza la petición HTTP POST al endpoint /register.
+  /// Envía los datos del formulario al servidor para registrar el usuario.
   Future<void> registrarUsuari() async {
     final url = Uri.parse('http://localhost:4000/register');
     try {
@@ -43,22 +49,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final data = jsonDecode(resposta.body);
 
       if (resposta.statusCode == 201) {
+        // Registro correcto: muestra mensaje y redirige al login.
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Compte creat correctament')),
+          const SnackBar(content: Text('Cuenta creada correctamente')),
         );
         Navigator.pushReplacementNamed(context, '/login');
       } else {
+        // Error devuelto por el backend.
         setState(() {
-          error = data['error'] ?? 'Error desconegut';
+          error = data['error'] ?? 'Error desconocido al registrar';
         });
       }
     } catch (e) {
+      // Error de conexión con el backend.
       setState(() {
-        error = 'Error de connexió amb el servidor';
+        error = 'Error de conexión con el servidor';
       });
     }
   }
 
+  /// Abre el selector de fecha (DatePicker).
   Future<void> triarData(BuildContext context) async {
     final DateTime? data = await showDatePicker(
       context: context,
@@ -87,7 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Image.asset('assets/logo.png', height: 80),
                 const SizedBox(height: 20),
                 Text(
-                  'Crear un nou compte',
+                  'Crear una nueva cuenta',
                   style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -99,7 +109,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Ja creat?',
+                      '¿Ya tienes cuenta?',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: Colors.white70,
@@ -108,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextButton(
                       onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
                       child: Text(
-                        'Inicia la sessió',
+                        'Inicia sesión',
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -119,16 +129,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ],
                 ),
                 const SizedBox(height: 30),
-                buildTextField('Usuari', (v) => setState(() => nom = v)),
-                buildTextField('Contrasenya', (v) => setState(() => contrasenya = v), isPassword: true),
-                buildTextField('Correu electrònic', (v) => setState(() => email = v)),
+                buildTextField('Nombre de usuario', (v) => setState(() => nom = v)),
+                buildTextField('Contraseña', (v) => setState(() => contrasenya = v), isPassword: true),
+                buildTextField('Correo electrónico', (v) => setState(() => email = v)),
                 const SizedBox(height: 15),
+                // Selector de fecha de nacimiento
                 GestureDetector(
                   onTap: () => triarData(context),
                   child: AbsorbPointer(
                     child: TextField(
                       decoration: InputDecoration(
-                        labelText: 'Data de naixement',
+                        labelText: 'Fecha de nacimiento',
                         labelStyle: const TextStyle(color: Colors.white70),
                         hintText: 'yyyy-mm-dd',
                         hintStyle: const TextStyle(color: Colors.white38),
@@ -145,6 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 15),
+                // Selector del tipo de cuenta
                 Theme(
                   data: Theme.of(context).copyWith(
                     canvasColor: Colors.blue[200],
@@ -182,7 +194,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     elevation: 10,
                   ),
                   child: Text(
-                    'Crear el compte',
+                    'Crear cuenta',
                     style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -194,6 +206,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  /// Constructor de los campos del formulario con opción para contraseña visible/oculta.
   Widget buildTextField(String label, Function(String) onChanged, {bool isPassword = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

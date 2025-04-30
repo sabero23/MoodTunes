@@ -1,47 +1,52 @@
+/* Estilos generales del contenedor principal de la página de acceso denegado */
 .access-denied-container {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #3f5f86;
-    color: white;
-    font-family: 'SF Pro Display', sans-serif;
-    text-align: center;
-    padding: 20px;
-  }
-  
-  .access-denied-box {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-  }
-  
-  .access-denied-box h2 {
-    font-size: 28px;
-    margin-top: 15px;
-    margin-bottom: 10px;
-  }
-  
-  .access-denied-box p {
-    font-size: 16px;
-    margin-bottom: 30px;
-  }
-  
-  .access-btn {
-    background-color: white;
-    color: #3f5f86;
-    border: none;
-    font-weight: bold;
-    padding: 12px 30px;
-    border-radius: 40px;
-    cursor: pointer;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-    font-size: 16px;
-    transition: 0.3s ease;
-  }
-  
-  .access-btn:hover {
-    background-color: #f0f0f0;
-  }
-  
+  height: 100vh;                                 /* Ocupa toda la altura de la pantalla */
+  display: flex;                                 /* Flexbox para centrar el contenido */
+  justify-content: center;                       /* Centra horizontalmente */
+  align-items: center;                           /* Centra verticalmente */
+  background-color: #3f5f86;                     /* Color de fondo azul oscuro (corporativo) */
+  color: white;                                  /* Color del texto */
+  font-family: 'SF Pro Display', sans-serif;     /* Tipografía definida para la app */
+  text-align: center;                            /* Alineación centrada del texto */
+  padding: 20px;                                 /* Espaciado interno */
+}
+
+/* Caja que contiene el mensaje y el botón dentro de la página */
+.access-denied-box {
+  background: rgba(255, 255, 255, 0.05);         /* Fondo semitransparente para destacar el contenido */
+  padding: 40px;                                 /* Espaciado interno generoso */
+  border-radius: 15px;                           /* Bordes redondeados */
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3);        /* Sombra para darle profundidad */
+}
+
+/* Estilo del título principal */
+.access-denied-box h2 {
+  font-size: 28px;                               /* Tamaño de fuente grande para el título */
+  margin-top: 15px;                             /* Separación superior */
+  margin-bottom: 10px;                          /* Separación inferior */
+}
+
+/* Estilo del párrafo descriptivo */
+.access-denied-box p {
+  font-size: 16px;                               /* Tamaño de fuente medio para el texto descriptivo */
+  margin-bottom: 30px;                           /* Separación inferior */
+}
+
+/* Estilo del botón de volver o salir */
+.access-btn {
+  background-color: white;                      /* Fondo blanco para el botón */
+  color: #3f5f86;                               /* Color azul corporativo para el texto */
+  border: none;                                 /* Sin borde */
+  font-weight: bold;                            /* Texto en negrita */
+  padding: 12px 30px;                           /* Espaciado interno del botón */
+  border-radius: 40px;                          /* Bordes redondeados tipo "píldora" */
+  cursor: pointer;                              /* Cursor tipo puntero al pasar el ratón */
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);       /* Sombra para darle relieve */
+  font-size: 16px;                              /* Tamaño de fuente del botón */
+  transition: 0.3s ease;                        /* Transición suave al hacer hover */
+}
+
+/* Efecto hover del botón */
+.access-btn:hover {
+  background-color: #f0f0f0;                    /* Cambia el fondo al pasar el ratón */
+}

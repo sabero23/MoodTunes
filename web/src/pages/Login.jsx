@@ -24,9 +24,15 @@ export default function Login() {
 
       if (resposta.ok) {
         toast.success("Sessió iniciada correctament!");
+
+        // ✅ Guardem tota la info important
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("email", email);
+        localStorage.setItem("nombre", data.nom);
+        localStorage.setItem("rol", data.rol);
         localStorage.setItem("usuari", JSON.stringify(data));
 
-        // Redirigeix segons el rol
+        // ✅ Redirigeix segons el rol
         setTimeout(() => {
           navigate(`/${data.rol}`);
         }, 1500);
