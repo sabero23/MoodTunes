@@ -1,20 +1,12 @@
-# Utilitza la imatge oficial de Node
 FROM node:18
 
-# Estableix el directori de treball dins del contenidor
 WORKDIR /app
 
-# Copia els fitxers de dependències
 COPY package*.json ./
-
-# Instal·la les dependències
 RUN npm install
 
-# Copia tot el projecte al contenidor
 COPY . .
 
-# Exposa el port per defecte de Vite (frontend)
 EXPOSE 5173
 
-# Comanda per arrencar el servidor Vite
 CMD ["npm", "run", "dev", "--", "--host"]

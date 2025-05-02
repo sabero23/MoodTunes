@@ -13,7 +13,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🔌 Conexión a MySQL (pool de conexiones)
+// Conexión a MySQL
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -22,10 +22,10 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
 });
 
-// 🟢 Ruta de prueba
+// Ruta de prueba
 app.get('/', (req, res) => res.send('Backend MoodTunes OK'));
 
-// 🔐 LOGIN
+// LOGIN
 app.post('/login', async (req, res) => {
   const { email, contrasenya } = req.body;
   try {
@@ -42,7 +42,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// 📝 REGISTER
+// REGISTER
 app.post('/register', async (req, res) => {
   const { email, nom, contrasenya, rol, data_naixement } = req.body;
   try {
@@ -61,17 +61,17 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// 🔐 Ruta protegida - Solo ADMIN
+// ADMIN
 app.get('/admin-data', authRequired, onlyRole('admin'), (req, res) => {
   res.json({ mensaje: 'Datos protegidos para administradores' });
 });
 
-// 🔐 Ruta protegida - Solo PREMIUM
+// PREMIUM
 app.get('/premium-data', authRequired, onlyRole('premium'), (req, res) => {
   res.json({ mensaje: 'Datos protegidos para usuarios premium' });
 });
 
-// 🎵 AUTH SPOTIFY - Iniciar sesión con Spotify
+// AUTH SPOTIFY
 app.get('/auth/spotify', async (req, res) => {
   const email = req.query.email;
   if (!email) return res.status(400).json({ error: 'Email no proporcionado' });
@@ -83,19 +83,18 @@ app.get('/auth/spotify', async (req, res) => {
   res.redirect(url);
 });
 
-// 🎵 CALLBACK SPOTIFY - Guardar refresh_token
+// CALLBACK SPOTIFY
 app.get('/callback', async (req, res) => {
   const { code, state: email } = req.query;
-
   if (!code || !email) {
     return res.status(400).send('Faltan parámetros en la solicitud');
   }
 
   try {
-    const response = await fetch('https://accounts.spotify.com/api/token', {
+    const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: {
-        'Authorization': 'Basic ' + Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64'),
+        Authorization: 'Basic ' + Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64'),
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
@@ -105,20 +104,48 @@ app.get('/callback', async (req, res) => {
       }),
     });
 
-    const data = await response.json();
+    const tokens = await tokenRes.json();
 
-    if (data.error) {
-      return res.status(400).json({ error: data.error_description });
+    if (tokens.error) {
+      return res.status(400).json({ error: tokens.error_description });
     }
 
-    await pool.query('UPDATE usuaris SET spotify_refresh_token = ? WHERE email = ?', [data.refresh_token, email]);
-    res.redirect(`http://localhost:5173/redir?email=${email}`); // Redirige a una pantalla intermedia
+    const access_token = tokens.access_token;
+    const refresh_token = tokens.refresh_token;
+
+    const profileRes = await fetch('https://api.spotify.com/v1/me', {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
+
+    const text = await profileRes.text();
+
+    try {
+      const perfil = JSON.parse(text);
+      const spotify_id = perfil.id;
+      const spotify_nom = perfil.display_name;
+
+      await pool.query(`
+        UPDATE usuaris 
+        SET spotify_refresh_token = ?, spotify_id = ?, spotify_nom = ?
+        WHERE email = ?
+      `, [refresh_token, spotify_id, spotify_nom, email]);
+
+      res.redirect(`http://localhost:5173/redir?email=${email}`);
+    } catch (err) {
+      console.error('Error en parseig JSON Spotify:', text);
+      res.status(500).json({
+        error: 'Error al obtener datos del usuario Spotify',
+        detalles: text,
+      });
+    }
   } catch (err) {
-    res.status(500).json({ error: 'Error al obtener el token de Spotify', detalles: err.message });
+    res.status(500).json({ error: 'Error al conectar con Spotify', detalles: err.message });
   }
 });
 
-// 🔄 REFRESH TOKEN SPOTIFY
+// REFRESH TOKEN
 app.post('/spotify/refresh', async (req, res) => {
   const { refresh_token } = req.body;
 
@@ -126,7 +153,7 @@ app.post('/spotify/refresh', async (req, res) => {
     const response = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: {
-        'Authorization': 'Basic ' + Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64'),
+        Authorization: 'Basic ' + Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64'),
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
@@ -149,7 +176,7 @@ app.post('/spotify/refresh', async (req, res) => {
   }
 });
 
-// 🔁 TOKEN BACKEND SIN LOGIN
+// TOKEN SPOTIFY directo
 app.get('/spotify/token', async (req, res) => {
   try {
     const token = await getSpotifyToken();
@@ -159,33 +186,5 @@ app.get('/spotify/token', async (req, res) => {
   }
 });
 
-// 🔵 Comprobar si el usuario tiene refresh_token de Spotify (Nuevo endpoint)
-app.get('/check-spotify', async (req, res) => {
-  const email = req.query.email;
-  
-  if (!email) {
-    return res.status(400).json({ error: 'Email no proporcionado' });
-  }
-
-  try {
-    const [rows] = await pool.query('SELECT spotify_refresh_token, rol FROM usuaris WHERE email = ?', [email]);
-    
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-
-    const { spotify_refresh_token, rol } = rows[0];
-
-    if (spotify_refresh_token) {
-      res.json({ conectado: true, rol });
-    } else {
-      res.json({ conectado: false, rol });
-    }
-  } catch (err) {
-    res.status(500).json({ error: 'Error al comprobar Spotify', detalles: err.message });
-  }
-});
-
-
-// 🚀 Arranque del servidor
+// Servidor
 app.listen(4000, '0.0.0.0', () => console.log('Backend escuchando en el puerto 4000'));

@@ -11,39 +11,59 @@ CREATE TABLE usuaris (
   contrasenya VARCHAR(100) NOT NULL,                           -- Contraseña encriptada (bcrypt).
   rol ENUM('standard', 'premium', 'admin') DEFAULT 'standard', -- Tipo de rol del usuario.
   data_naixement DATE,                                         -- Fecha de nacimiento.
-  spotify_refresh_token VARCHAR(255)                           -- Token de refresh de Spotify (si aplica).
+  spotify_refresh_token VARCHAR(255),                          -- Token de refresh de Spotify (si aplica).
+  spotify_id VARCHAR(100),
+  spotify_nom VARCHAR(255)
+
 );
 
 -- Insertamos un usuario administrador por defecto.
--- La contraseña ya está encriptada con bcrypt (hash).
 INSERT INTO usuaris (email, nom, contrasenya, rol, data_naixement)
 VALUES (
   'admin@moodtunes.com',
   'Admin',
-  '$2b$12$7qDKiQjKSsni9Qzi6vd7AOhS/QaC2xJOMIFC3Lu4HhnLlYZ5G8YJW', -- hash bcrypt
+  '$2b$12$7qDKiQjKSsni9Qzi6vd7AOhS/QaC2xJOMIFC3Lu4HhnLlYZ5G8YJW',
   'admin',
   '2005-12-28'
 );
 
+-- Insertamos usuario STANDARD
+INSERT INTO usuaris (email, nom, contrasenya, rol, data_naixement)
+VALUES (
+  'standard@moodtunes.com',
+  'Usuari Standard',
+  '$2a$10$GXQPPhoGyk.xLY.O69BN3egVrcWfH.K8ZsWUcgPz1NOFe1WZUiiIy',
+  'standard',
+  '2000-01-01'
+);
+
+-- Insertamos usuario PREMIUM
+INSERT INTO usuaris (email, nom, contrasenya, rol, data_naixement)
+VALUES (
+  'premium@moodtunes.com',
+  'Usuari Premium',
+  '$2a$10$GXQPPhoGyk.xLY.O69BN3egVrcWfH.K8ZsWUcgPz1NOFe1WZUiiIy',
+  'premium',
+  '1995-05-15'
+);
+
 -- Tabla 'estats_anim':
--- Guarda los registros del estado de ánimo introducido por cada usuario.
 CREATE TABLE estats_anim (
-  id INT AUTO_INCREMENT PRIMARY KEY,                                      -- ID autoincremental.
-  email VARCHAR(100),                                                     -- Usuario que registra el estado.
-  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,                               -- Fecha y hora de registro.
-  estat ENUM('molt malament', 'malament', 'regular', 'bé', 'molt bé'),    -- Estado de ánimo.
-  FOREIGN KEY (email) REFERENCES usuaris(email) ON DELETE CASCADE         -- Relación con tabla usuaris.
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(100),
+  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  estat ENUM('molt malament', 'malament', 'regular', 'bé', 'molt bé'),
+  FOREIGN KEY (email) REFERENCES usuaris(email) ON DELETE CASCADE
 );
 
 -- Tabla 'recomanacions':
--- Guarda las canciones recomendadas al usuario según su estado de ánimo.
 CREATE TABLE recomanacions (
-  id INT AUTO_INCREMENT PRIMARY KEY,                                        -- ID autoincremental.
-  email VARCHAR(100),                                                       -- Usuario al que se le recomienda.
-  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,                                 -- Fecha de recomendación.
-  estat_anim ENUM('molt malament', 'malament', 'regular', 'bé', 'molt bé'), -- Estado de ánimo en ese momento.
-  canco_id VARCHAR(100),                                                    -- ID de la canción (Spotify).
-  nom_canco VARCHAR(255),                                                   -- Nombre de la canción.
-  artista VARCHAR(255),                                                     -- Nombre del artista.
-  FOREIGN KEY (email) REFERENCES usuaris(email) ON DELETE CASCADE           -- Relación con tabla usuaris.
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(100),
+  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  estat_anim ENUM('molt malament', 'malament', 'regular', 'bé', 'molt bé'),
+  canco_id VARCHAR(100),
+  nom_canco VARCHAR(255),
+  artista VARCHAR(255),
+  FOREIGN KEY (email) REFERENCES usuaris(email) ON DELETE CASCADE
 );

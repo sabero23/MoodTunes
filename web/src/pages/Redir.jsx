@@ -1,51 +1,40 @@
-// src/pages/Redir.jsx
-
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Redir() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Obtenemos el email guardado en localStorage
-    const email = localStorage.getItem('email');
+    const params = new URLSearchParams(location.search);
+    const email = params.get("email");
 
     if (!email) {
-      // Si no hay email guardado, volver al login
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
-    // Comprobamos si el usuario ya está conectado a Spotify
-    const checkSpotifyConnection = async () => {
-      try {
-        const response = await fetch(`http://localhost:4000/check-spotify?email=${email}`);
-        const data = await response.json();
-
-        if (data.connected) {
-          // Si ya está conectado, lo mandamos directamente a su página
-          const usuario = JSON.parse(localStorage.getItem('usuari'));
-          if (usuario?.rol) {
-            navigate(`/${usuario.rol}`);
-          } else {
-            navigate('/login');
-          }
+    // Llamada al backend para obtener datos del usuario
+    fetch(`http://localhost:4000/usuarios/info?email=${email}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          navigate("/login");
         } else {
-          // Si no está conectado, lo mandamos a conectar
-          navigate('/connect-spotify');
+          localStorage.setItem("email", email);
+          localStorage.setItem("nombre", data.nom);
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("rol", data.rol);
+
+          if (!data.spotify_refresh_token) {
+            navigate("/connect-spotify");
+          } else {
+            navigate(`/${data.rol}`);
+          }
         }
-      } catch (err) {
-        console.error('Error verificando conexión Spotify:', err);
-        navigate('/login');
-      }
-    };
+      })
+      .catch(() => navigate("/login"));
+  }, [location, navigate]);
 
-    checkSpotifyConnection();
-  }, [navigate]);
-
-  return (
-    <div style={{ color: 'white', textAlign: 'center', marginTop: '100px' }}>
-      Verificando tu conexión con Spotify...
-    </div>
-  );
+  return null; // No renderiza nada, es una pantalla de transición
 }

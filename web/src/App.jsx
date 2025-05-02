@@ -6,8 +6,9 @@ import PremiumPage from './pages/PremiumPage';
 import StandardPage from './pages/StandardPage';
 import AccessDenied from './pages/AccessDenied';
 import { ToastContainer } from 'react-toastify';
-import Redir from './pages/Redir';
+import ConnectSpotify from './pages/ConnectSpotify';
 import 'react-toastify/dist/ReactToastify.css';
+import Redir from "./pages/Redir";
 
 function ProtectedRoute({ element, allowedRoles }) {
   const usuari = JSON.parse(localStorage.getItem('usuari'));
@@ -37,6 +38,7 @@ function App() {
           path="/standard"
           element={<ProtectedRoute allowedRoles={['standard']} element={<StandardPage />} />}
         />
+        <Route path="/connect-spotify" element={<ConnectSpotify />} />
         <Route path="/redir" element={<Redir />} />
       </Routes>
 
