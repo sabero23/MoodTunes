@@ -83,12 +83,18 @@ cd ..
 
 :: DOCKER
 cd docker
-echo 🐳 Iniciant serveis Docker...
+echo 🐳 Aturant contenidors anteriors...
 call docker compose down -v
-call docker compose up --build
+echo 🛠️ Reconstruint i arrencant serveis...
+start cmd /k "docker compose up --build"
+
 cd ..
+
+:: OBRIR WEB
+timeout /t 10 >nul
+echo 🌐 Obrint l'aplicació al navegador...
+start http://localhost:5173
 
 echo.
 echo ✅ MoodTunes arrencat correctament!
-echo 💡 Pots obrir Flutter amb: cd app && flutter run
-pause
+echo 💡 Pots executar Flutter amb: cd app && flutter run

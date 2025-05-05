@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
@@ -12,6 +11,7 @@
   },
   "dependencies": {
     "bootstrap": "^5.3.5",
+    "framer-motion": "^12.9.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",

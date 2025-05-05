@@ -186,5 +186,19 @@ app.get('/spotify/token', async (req, res) => {
   }
 });
 
+app.get('/usuarios/info', async (req, res) => {
+  const { email } = req.query;
+  try {
+    const [rows] = await pool.query('SELECT email, nom, rol, spotify_refresh_token FROM usuaris WHERE email = ?', [email]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Usuari no trobat' });
+
+    const token = jwt.sign({ email: rows[0].email, rol: rows[0].rol, nom: rows[0].nom }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ ...rows[0], token });
+  } catch (err) {
+    res.status(500).json({ error: 'Error en obtenir dades', detalles: err.message });
+  }
+});
+
+
 // Servidor
 app.listen(4000, '0.0.0.0', () => console.log('Backend escuchando en el puerto 4000'));

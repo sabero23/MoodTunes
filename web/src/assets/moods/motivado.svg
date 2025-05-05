@@ -1,0 +1,27 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <radialGradient id="motivado_grad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FF9800" stop-opacity="1"/>
+            <stop offset="100%" stop-color="#FF9800" stop-opacity="0.2"/>
+        </radialGradient>
+    </defs>
+    <g transform="translate(100,100)">
+        
+        <path d="M 30.00,0.00 L 33.98,5.99 L 35.51,12.93 L 33.77,19.50 L 28.95,24.29 L 22.18,26.43 L 15.00,25.98 L 8.72,23.96 L 3.86,21.87 L 0.00,21.00 L -3.86,21.87 L -8.72,23.96 L -15.00,25.98 L -22.18,26.43 L -28.95,24.29 L -33.77,19.50 L -35.51,12.93 L -33.98,5.99 L -30.00,0.00 L -25.11,-4.43 L -20.87,-7.59 L -18.19,-10.50 L -17.01,-14.27 L -16.39,-19.53 L -15.00,-25.98 L -11.80,-32.42 L -6.56,-37.22 L -0.00,-39.00 L 6.56,-37.22 L 11.80,-32.42 L 15.00,-25.98 L 16.39,-19.53 L 17.01,-14.27 L 18.19,-10.50 L 20.87,-7.59 L 25.11,-4.43 L 30.00,-0.00 Z" fill="url(#motivado_grad)" stroke="#FF9800" stroke-opacity="0.3" stroke-width="1.5" opacity="0.7">
+          <animateTransform attributeName="transform" attributeType="XML"
+            type="scale" values="1;1.03;1" dur="4s" repeatCount="indefinite"/>
+        </path>
+        <path d="M 40.00,0.00 L 45.30,7.99 L 47.35,17.24 L 45.03,26.00 L 38.60,32.39 L 29.57,35.24 L 20.00,34.64 L 11.63,31.95 L 5.14,29.16 L 0.00,28.00 L -5.14,29.16 L -11.63,31.95 L -20.00,34.64 L -29.57,35.24 L -38.60,32.39 L -45.03,26.00 L -47.35,17.24 L -45.30,7.99 L -40.00,0.00 L -33.48,-5.90 L -27.82,-10.13 L -24.25,-14.00 L -22.68,-19.03 L -21.85,-26.05 L -20.00,-34.64 L -15.73,-43.23 L -8.75,-49.63 L -0.00,-52.00 L 8.75,-49.63 L 15.73,-43.23 L 20.00,-34.64 L 21.85,-26.05 L 22.68,-19.03 L 24.25,-14.00 L 27.82,-10.13 L 33.48,-5.90 L 40.00,-0.00 Z" fill="url(#motivado_grad)" stroke="#FF9800" stroke-opacity="0.4" stroke-width="1.5" opacity="0.5499999999999999">
+          <animateTransform attributeName="transform" attributeType="XML"
+            type="scale" values="1;1.03;1" dur="4s" repeatCount="indefinite"/>
+        </path>
+        <path d="M 50.00,0.00 L 56.63,9.98 L 59.19,21.54 L 56.29,32.50 L 48.25,40.49 L 36.96,44.05 L 25.00,43.30 L 14.54,39.94 L 6.43,36.45 L 0.00,35.00 L -6.43,36.45 L -14.54,39.94 L -25.00,43.30 L -36.96,44.05 L -48.25,40.49 L -56.29,32.50 L -59.19,21.54 L -56.63,9.98 L -50.00,0.00 L -41.85,-7.38 L -34.78,-12.66 L -30.31,-17.50 L -28.35,-23.79 L -27.32,-32.56 L -25.00,-43.30 L -19.67,-54.03 L -10.94,-62.03 L -0.00,-65.00 L 10.94,-62.03 L 19.67,-54.03 L 25.00,-43.30 L 27.32,-32.56 L 28.35,-23.79 L 30.31,-17.50 L 34.78,-12.66 L 41.85,-7.38 L 50.00,-0.00 Z" fill="url(#motivado_grad)" stroke="#FF9800" stroke-opacity="0.5" stroke-width="1.5" opacity="0.39999999999999997">
+          <animateTransform attributeName="transform" attributeType="XML"
+            type="scale" values="1;1.03;1" dur="4s" repeatCount="indefinite"/>
+        </path>
+        <path d="M 60.00,0.00 L 67.95,11.98 L 71.03,25.85 L 67.55,39.00 L 57.90,48.59 L 44.35,52.86 L 30.00,51.96 L 17.44,47.92 L 7.71,43.74 L 0.00,42.00 L -7.71,43.74 L -17.44,47.92 L -30.00,51.96 L -44.35,52.86 L -57.90,48.59 L -67.55,39.00 L -71.03,25.85 L -67.95,11.98 L -60.00,0.00 L -50.23,-8.86 L -41.73,-15.19 L -36.37,-21.00 L -34.02,-28.55 L -32.78,-39.07 L -30.00,-51.96 L -23.60,-64.84 L -13.13,-74.44 L -0.00,-78.00 L 13.13,-74.44 L 23.60,-64.84 L 30.00,-51.96 L 32.78,-39.07 L 34.02,-28.55 L 36.37,-21.00 L 41.73,-15.19 L 50.23,-8.86 L 60.00,-0.00 Z" fill="url(#motivado_grad)" stroke="#FF9800" stroke-opacity="0.6000000000000001" stroke-width="1.5" opacity="0.25">
+          <animateTransform attributeName="transform" attributeType="XML"
+            type="scale" values="1;1.03;1" dur="4s" repeatCount="indefinite"/>
+        </path>
+    </g>
+</svg>

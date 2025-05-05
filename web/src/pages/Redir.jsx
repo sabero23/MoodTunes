@@ -9,32 +9,26 @@ export default function Redir() {
     const params = new URLSearchParams(location.search);
     const email = params.get("email");
 
-    if (!email) {
-      navigate("/login");
-      return;
-    }
+    if (!email) return navigate("/login");
 
-    // Llamada al backend para obtener datos del usuario
     fetch(`http://localhost:4000/usuarios/info?email=${email}`)
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
-          navigate("/login");
-        } else {
-          localStorage.setItem("email", email);
-          localStorage.setItem("nombre", data.nom);
-          localStorage.setItem("token", data.token);
-          localStorage.setItem("rol", data.rol);
+        if (data.error) return navigate("/login");
 
-          if (!data.spotify_refresh_token) {
-            navigate("/connect-spotify");
-          } else {
-            navigate(`/${data.rol}`);
-          }
+        localStorage.setItem("email", email);
+        localStorage.setItem("nombre", data.nom);
+        localStorage.setItem("rol", data.rol);
+        localStorage.setItem("token", data.token);
+
+        if (!data.spotify_refresh_token) {
+          navigate("/connect-spotify");
+        } else {
+          navigate(`/${data.rol}`);
         }
       })
       .catch(() => navigate("/login"));
   }, [location, navigate]);
 
-  return null; // No renderiza nada, es una pantalla de transición
+  return null;
 }
