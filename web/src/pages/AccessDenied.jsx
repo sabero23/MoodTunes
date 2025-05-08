@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { FiAlertTriangle } from "react-icons/fi";
-import "./AccessDenied.css";
 
 export default function AccessDenied() {
   const navigate = useNavigate();

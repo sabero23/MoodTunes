@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import MoodSelector from "../components/MoodSelector";
+import Header from "../components/Header";
+import MoodSelector from "../components/MoodSelectorMagic";
 
 export default function StandardPage() {
   const navigate = useNavigate();
@@ -18,8 +19,8 @@ export default function StandardPage() {
       setNombre(nombreGuardado || "Usuari");
 
       fetch(`http://localhost:4000/usuarios/info?email=${email}`)
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           if (data.spotify_refresh_token) {
             setSpotifyLinked(true);
           }
@@ -33,17 +34,22 @@ export default function StandardPage() {
   };
 
   return (
-    <div className="main-container">
-      <h1>Benvingut, {nombre}</h1>
+    <div className="standard-page">
+      <Header />
+      <div className="main-container">
+        <div className="welcome-block">
+          <h1>Benvingut, Usuari Standard</h1>
+        </div>
 
-      {!spotifyLinked ? (
-        <>
-          <p>Abans d'utilitzar el servei, has de vincular el teu compte Spotify:</p>
-          <button onClick={loginSpotify}>Iniciar sessió amb Spotify</button>
-        </>
-      ) : (
-        <MoodSelector />
-      )}
+        {!spotifyLinked ? (
+          <>
+            <p>Abans d'utilitzar el servei, has de vincular el teu compte Spotify:</p>
+            <button onClick={loginSpotify}>Iniciar sessió amb Spotify</button>
+          </>
+        ) : (
+          <MoodSelector />
+        )}
+      </div>
     </div>
   );
 }

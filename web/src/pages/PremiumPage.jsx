@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import MoodSelector from "../components/MoodSelector";
+import Header from "../components/Header";
+import MoodSelector from "../components/MoodSelectorMagic";
 
 export default function PremiumPage() {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ export default function PremiumPage() {
     if (!token || !email) {
       navigate("/login");
     } else {
-      setNombre(nombreGuardado || "Usuari Premium");
+      setNombre(nombreGuardado || "Usuari");
 
       fetch(`http://localhost:4000/usuarios/info?email=${email}`)
         .then((res) => res.json())
@@ -33,18 +34,19 @@ export default function PremiumPage() {
   };
 
   return (
-    <div className="main-container">
-      <h1>Benvingut, {nombre}</h1>
-      {!spotifyLinked ? (
-        <>
-          <p>Abans d'utilitzar el servei, has de vincular el teu compte Spotify:</p>
-          <button onClick={loginSpotify}>Iniciar sessió amb Spotify</button>
-        </>
-      ) : (
-        <>
+    <div className="premium-page">
+      <Header />
+      <div className="main-container">
+        <h1>Benvingut, {nombre}</h1>
+        {!spotifyLinked ? (
+          <>
+            <p>Abans d'utilitzar el servei, has de vincular el teu compte Spotify:</p>
+            <button onClick={loginSpotify}>Iniciar sessió amb Spotify</button>
+          </>
+        ) : (
           <MoodSelector />
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 }

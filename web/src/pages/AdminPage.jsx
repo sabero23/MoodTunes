@@ -1,5 +1,4 @@
 import Header from '../components/Header';
-import './RolePages.css';
 
 export default function AdminPage() {
   return (
