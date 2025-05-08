@@ -31,7 +31,7 @@ app.post('/login', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM usuaris WHERE email = ?', [email]);
     if (rows.length === 1 && await bcrypt.compare(contrasenya, rows[0].contrasenya)) {
-      const usuari = { email, rol: rows[0].rol, nom: rows[0].nom };
+      const usuari = { id: rows[0].id, email, rol: rows[0].rol, nom: rows[0].nom };
       const token = jwt.sign(usuari, process.env.JWT_SECRET, { expiresIn: '1h' });
       res.json({ token, ...usuari });
     } else {
@@ -126,11 +126,12 @@ app.get('/callback', async (req, res) => {
       const spotify_id = perfil.id;
       const spotify_nom = perfil.display_name;
 
-      await pool.query(`
-        UPDATE usuaris 
-        SET spotify_refresh_token = ?, spotify_id = ?, spotify_nom = ?
-        WHERE email = ?
-      `, [refresh_token, spotify_id, spotify_nom, email]);
+      await pool.query(
+        `UPDATE usuaris 
+         SET spotify_refresh_token = ?, spotify_id = ?, spotify_nom = ?
+         WHERE email = ?`,
+        [refresh_token, spotify_id, spotify_nom, email]
+      );
 
       res.redirect(`http://localhost:5173/redir?email=${email}`);
     } catch (err) {
@@ -186,19 +187,81 @@ app.get('/spotify/token', async (req, res) => {
   }
 });
 
+// INFO USUARIO
 app.get('/usuarios/info', async (req, res) => {
   const { email } = req.query;
   try {
-    const [rows] = await pool.query('SELECT email, nom, rol, spotify_refresh_token FROM usuaris WHERE email = ?', [email]);
+    const [rows] = await pool.query('SELECT id, email, nom, rol, spotify_refresh_token FROM usuaris WHERE email = ?', [email]);
     if (rows.length === 0) return res.status(404).json({ error: 'Usuari no trobat' });
 
-    const token = jwt.sign({ email: rows[0].email, rol: rows[0].rol, nom: rows[0].nom }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: rows[0].id, email: rows[0].email, rol: rows[0].rol, nom: rows[0].nom }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.json({ ...rows[0], token });
   } catch (err) {
     res.status(500).json({ error: 'Error en obtenir dades', detalles: err.message });
   }
 });
 
+// CREAR PLAYLIST
+app.post('/playlists', authRequired, async (req, res) => {
+  const { nom, descripcio } = req.body;
+  const userId = req.user.id;
 
-// Servidor
+  if (!nom || nom.trim() === "") {
+    return res.status(400).json({ error: 'El nom de la playlist és obligatori' });
+  }
+
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO playlists (user_id, nom, descripcio) VALUES (?, ?, ?)',
+      [userId, nom.trim(), descripcio]
+    );
+
+    res.status(201).json({
+      missatge: 'Playlist creada correctament',
+      id: result.insertId
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Error en crear la playlist', detalls: err.message });
+  }
+});
+
+// OBTENIR PLAYLISTS
+app.get('/playlists', authRequired, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const [playlists] = await pool.query(
+      'SELECT id, nom, descripcio, created_at FROM playlists WHERE user_id = ?',
+      [userId]
+    );
+
+    res.json({ playlists });
+  } catch (err) {
+    console.error('Error al obtenir playlists:', err);
+    res.status(500).json({ error: 'Error en obtenir les playlists', detalls: err.message });
+  }
+});
+
+// ELIMINAR PLAYLIST
+app.delete('/playlists/:id', authRequired, async (req, res) => {
+  const userId = req.user.id;
+  const playlistId = req.params.id;
+
+  try {
+    const [result] = await pool.query(
+      'DELETE FROM playlists WHERE id = ? AND user_id = ?',
+      [playlistId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Playlist no trobada o no teva' });
+    }
+
+    res.json({ ok: true, missatge: 'Playlist eliminada' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar playlist', detalls: err.message });
+  }
+});
+
+// INICI SERVIDOR
 app.listen(4000, '0.0.0.0', () => console.log('Backend escuchando en el puerto 4000'));

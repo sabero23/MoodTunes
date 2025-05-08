@@ -52,7 +52,8 @@ services:
     depends_on:
       - backend
     environment:
-      - VITE_API_URL=http://backend:4000
+      - VITE_API_URL=
 
 volumes:
   mysql_data:
+

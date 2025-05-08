@@ -15,6 +15,8 @@ dotenv.config();
  */
 export function authRequired(req, res, next) {
   const authHeader = req.headers.authorization;
+  
+  console.log("🔍 Authorization Header:", authHeader); // Afegeix aquesta línia
 
   // Comprobamos si el header Authorization está presente
   if (!authHeader) {
