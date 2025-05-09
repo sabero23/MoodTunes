@@ -1,5 +1,5 @@
-import Playlists from "../components/Playlists";
-import CreatePlaylist from "../components/CreatePlaylist";
+import Playlists from "../src/components/Playlists";
+import CreatePlaylist from "../src/components/CreatePlaylist";
 
 function StandardPage() {
   return (
