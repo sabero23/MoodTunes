@@ -2,25 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Temes: variables HSL definides segons shadcn/magicui */
 @layer base {
   :root {
-    --background: 210 100% 98%;
-    --foreground: 220 20% 10%;
-    --primary: 220 100% 50%;
+    /* MODE CLAR — paleta elegant */
+    --background: 240 13% 85%;          /* #D7D9D7 Platinum */
+    --foreground: 0 0% 10%;
+    --primary: 310 20% 75%;             /* #BAACBD Rose Quartz */
     --primary-foreground: 0 0% 100%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card: 290 24% 74%;                /* #B48EAE Lilac */
+    --card-foreground: 0 0% 10%;
+    --muted: 0 0% 90%;                  /* #C9C5CB French Gray */
+    --muted-foreground: 0 0% 30%;
+    --border: 0 0% 75%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 215 50% 12%; /* Navy blue fosc */
+    /* MODE FOSC — paleta blava sòbria */
+    --background: 215 40% 16%;          /* #0B2545 Oxford Blue */
     --foreground: 220 20% 98%;
-    --primary: 220 100% 70%;
-    --primary-foreground: 220 100% 10%;
-    --card: 220 40% 16%;
-    --card-foreground: 220 20% 98%;
+    --primary: 207 44% 30%;             /* #134074 Yale Blue */
+    --primary-foreground: 0 0% 100%;
+    --card: 216 36% 18%;                /* #13315C Berkeley Blue */
+    --card-foreground: 220 20% 95%;
+    --muted: 212 30% 25%;
+    --muted-foreground: 210 20% 85%;
+    --border: 210 30% 25%;
   }
 
   body {
@@ -34,7 +41,33 @@
     @apply border-border;
   }
 
-  input, select, textarea {
+  input,
+  select,
+  textarea {
+    @apply w-full px-4 py-2 rounded-md border text-base bg-white text-black dark:bg-neutral-800 dark:text-white transition-colors;
     @apply focus:outline-none focus:ring-2 focus:ring-primary;
+  }
+
+  button {
+    @apply bg-primary text-primary-foreground font-medium py-2 px-4 rounded-md transition-all;
+    @apply hover:brightness-110 active:scale-95;
+  }
+
+  .card {
+    @apply bg-card text-card-foreground p-6 rounded-xl shadow-lg;
+  }
+}
+
+@layer utilities {
+  .dark body {
+    background: linear-gradient(135deg, #0B2545, #134074); /* fosc: Oxford → Yale */
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  body:not(.dark) {
+    background: linear-gradient(135deg, #D7D9D7, #BAACBD); /* clar: Platinum → Rose Quartz */
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
 }
