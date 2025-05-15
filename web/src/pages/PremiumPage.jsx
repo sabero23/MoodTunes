@@ -18,7 +18,9 @@ export default function PremiumPage() {
     } else {
       setNombre(nombreGuardado || "Usuari");
 
-      fetch(`http://localhost:4000/usuarios/info?email=${email}`)
+      fetch(`http://localhost:4000/usuarios/info?email=${email}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
         .then((res) => res.json())
         .then((data) => {
           if (data.spotify_refresh_token) {
@@ -28,9 +30,23 @@ export default function PremiumPage() {
     }
   }, [navigate]);
 
-  const loginSpotify = () => {
+  const loginSpotify = async () => {
     const email = localStorage.getItem("email");
-    window.location.href = `http://localhost:4000/auth/spotify?email=${email}`;
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`http://localhost:4000/auth/spotify?email=${email}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.redirected) {
+        window.location.href = res.url;
+      }
+    } catch (err) {
+      console.error("Error al iniciar sesión con Spotify:", err);
+    }
   };
 
   return (

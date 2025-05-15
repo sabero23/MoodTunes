@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -12,11 +13,27 @@ import PlaylistPage from "./pages/PlaylistPage"; // ✅ AFEGIT
 import PlaylistDetailPage from "./pages/PlaylistDetailPage";
 
 import 'react-toastify/dist/ReactToastify.css';
+=======
+// src/App.jsx
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import AdminPage from "./pages/AdminPage";
+import PremiumPage from "./pages/PremiumPage";
+import StandardPage from "./pages/StandardPage";
+import RecomanacionsPage from "./pages/RecomanacionsPage";
+import ReproductorPage from "./pages/ReproductorPage";
+import AccessDenied from "./pages/AccessDenied";
+import ConnectSpotify from "./pages/ConnectSpotify";
+import Redir from "./pages/Redir";
+import Layout from "./components/Layout";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
 
 function ProtectedRoute({ element, allowedRoles }) {
-  const usuari = JSON.parse(localStorage.getItem('usuari'));
+  const usuari = JSON.parse(localStorage.getItem("usuari"));
   const rol = usuari?.rol;
-
   return allowedRoles.includes(rol) ? element : <Navigate to="/denegat" />;
 }
 
@@ -31,18 +48,48 @@ function App() {
         <Route path="/connect-spotify" element={<ConnectSpotify />} />
         <Route path="/redir" element={<Redir />} />
 
+        {/* Pàgines protegides amb Layout */}
         <Route
           path="/admin"
-          element={<ProtectedRoute allowedRoles={['admin']} element={<AdminPage />} />}
+          element={
+            <Layout>
+              <ProtectedRoute allowedRoles={["admin"]} element={<AdminPage />} />
+            </Layout>
+          }
         />
         <Route
           path="/premium"
-          element={<ProtectedRoute allowedRoles={['premium']} element={<PremiumPage />} />}
+          element={
+            <Layout>
+              <ProtectedRoute allowedRoles={["premium"]} element={<PremiumPage />} />
+            </Layout>
+          }
         />
         <Route
           path="/standard"
-          element={<ProtectedRoute allowedRoles={['standard']} element={<StandardPage />} />}
+          element={
+            <Layout>
+              <ProtectedRoute allowedRoles={["standard"]} element={<StandardPage />} />
+            </Layout>
+          }
         />
+        <Route
+          path="/recomanacions"
+          element={
+            <Layout>
+              <ProtectedRoute allowedRoles={["standard", "premium"]} element={<RecomanacionsPage />} />
+            </Layout>
+          }
+        />
+        <Route
+          path="/reproductor"
+          element={
+            <Layout>
+              <ProtectedRoute allowedRoles={["standard", "premium"]} element={<ReproductorPage />} />
+            </Layout>
+          }
+        />
+<<<<<<< HEAD
 
         <Route
           path="/playlists"
@@ -53,6 +100,8 @@ function App() {
   path="/playlist/:id"
   element={<ProtectedRoute allowedRoles={['standard', 'premium']} element={<PlaylistDetailPage />} />}
 />
+=======
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
       </Routes>
 
       <ToastContainer

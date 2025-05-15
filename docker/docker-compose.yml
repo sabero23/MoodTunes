@@ -15,6 +15,11 @@ services:
       - DB_USER=root
       - DB_PASSWORD=DieSam2025!
       - DB_NAME=moodtunes
+      - JWT_SECRET=d8239f2c1e234f89aaf81239c8123adkfhajshdlkh213
+      - SPOTIFY_CLIENT_ID=d26f719218454a13b88ba2f15ee233b7
+      - SPOTIFY_CLIENT_SECRET=0b80c77971af4453b245cf8cec605f78
+      - SPOTIFY_REDIRECT_URI=https://9cab-90-161-233-110.ngrok-free.app/callback
+
 
   # BASE DE DADES (MySQL)
   db:

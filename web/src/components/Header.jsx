@@ -16,7 +16,11 @@ export default function Header() {
     const root = window.document.documentElement;
     setIsDarkMode(root.classList.contains("dark"));
     setRol(localStorage.getItem("rol") || "");
+<<<<<<< HEAD
     setNombre(localStorage.getItem("nom") || "");
+=======
+    setNombre(localStorage.getItem("nombre") || "");
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
   }, []);
 
   useEffect(() => {
@@ -78,13 +82,19 @@ export default function Header() {
           <p className="text-muted-foreground font-medium mb-2">
             {nombre} ({rol})
           </p>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
           {rol === "admin" && (
             <button onClick={() => goTo("/admin")} className="w-full text-left hover:underline">
               Admin Panel
             </button>
           )}
+<<<<<<< HEAD
 
+=======
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
           {rol === "premium" && (
             <>
               <button onClick={() => goTo("/premium")} className="w-full text-left hover:underline">
@@ -93,6 +103,7 @@ export default function Header() {
               <button onClick={() => goTo("/recomanacions")} className="w-full text-left hover:underline">
                 Recomanacions
               </button>
+<<<<<<< HEAD
               <button onClick={() => goTo("/playlists")} className="w-full text-left hover:underline">
                 🎵 Les meves Playlists
               </button>
@@ -102,6 +113,10 @@ export default function Header() {
             </>
           )}
 
+=======
+            </>
+          )}
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
           {rol === "standard" && (
             <>
               <button onClick={() => goTo("/standard")} className="w-full text-left hover:underline">
@@ -110,6 +125,7 @@ export default function Header() {
               <button onClick={() => goTo("/recomanacions")} className="w-full text-left hover:underline">
                 Recomanacions
               </button>
+<<<<<<< HEAD
               <button onClick={() => goTo("/playlists")} className="w-full text-left hover:underline">
                 🎵 Les meves Playlists
               </button>
@@ -118,6 +134,15 @@ export default function Header() {
               </button>
             </>
           )}
+=======
+            </>
+          )}
+          {(rol === "standard" || rol === "premium") && (
+            <button onClick={() => goTo("/reproductor")} className="w-full text-left hover:underline">
+              Reproductor
+            </button>
+          )}
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
         </div>
       )}
     </header>

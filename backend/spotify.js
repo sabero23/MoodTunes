@@ -1,52 +1,64 @@
-// --------------------------------------------
-// Integración con Spotify (Client Credentials)
-// --------------------------------------------
-// Este módulo obtiene un token de acceso desde Spotify utilizando el flow de
-// "Client Credentials" (para acceder a la API sin que el usuario haga login).
-// El token se cachea para evitar solicitudes innecesarias mientras siga vigente.
-
-import axios from 'axios';
+// spotify.js
+import fetch from 'node-fetch';
 import dotenv from 'dotenv';
+import mysql from 'mysql2/promise';
 
 dotenv.config();
 
-// Cache del token para evitar peticiones repetidas si el token aún no ha expirado.
-let tokenCache = { token: null, expires: null };
+// Conexión a la base de datos
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+});
 
 /**
- * Función para obtener el token de acceso de Spotify usando el flow client_credentials.
- * Si el token está cacheado y no ha expirado, se devuelve directamente.
- * Si no, se hace la petición a Spotify para obtener uno nuevo.
- *
- * @returns {Promise<string>} Token de acceso válido para la API de Spotify.
+ * Renueva el access_token de Spotify para un usuario según su ID
+ * @param {number} userId - ID del usuario en la BBDD
+ * @returns {Promise<string>} access_token válido
  */
-export async function getSpotifyToken() {
-  const now = Date.now();
-
-  // Si el token sigue siendo válido, lo devolvemos desde cache.
-  if (tokenCache.token && tokenCache.expires > now) {
-    return tokenCache.token;
-  }
-
-  // Si no hay token válido, pedimos uno nuevo a Spotify.
-  const response = await axios.post(
-    'https://accounts.spotify.com/api/token',
-    new URLSearchParams({ grant_type: 'client_credentials' }), // Tipo de grant para obtener el token sin login de usuario.
-    {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic ' + Buffer.from(
-          `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
-        ).toString('base64'), // Autenticación con client_id y client_secret.
-      },
-    }
+export async function getSpotifyTokenPerUsuari(userId) {
+  const [rows] = await pool.query(
+    'SELECT spotify_refresh_token FROM usuaris WHERE id = ?',
+    [userId]
   );
 
-  // Actualizamos la cache con el nuevo token y su tiempo de expiración.
-  tokenCache = {
-    token: response.data.access_token,
-    expires: now + response.data.expires_in * 1000, // expires_in viene en segundos, lo pasamos a milisegundos.
-  };
+  if (!rows.length || !rows[0].spotify_refresh_token) {
+    throw new Error('Usuari sense refresh token');
+  }
 
-  return tokenCache.token;
+  const refresh_token = rows[0].spotify_refresh_token;
+
+  const response = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      Authorization:
+        'Basic ' +
+        Buffer.from(
+          `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+        ).toString('base64'),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refresh_token,
+    }),
+  });
+
+  const raw = await response.text(); // Para depurar mejor
+  try {
+    const data = JSON.parse(raw);
+    if (!data.access_token) {
+      console.error('Error al renovar token:', data);
+      throw new Error('No access_token en la respuesta de Spotify');
+    }
+
+    return data.access_token;
+  } catch (e) {
+    console.error(' No es JSON válido:', e);
+    console.error('Spotify RAW Response:', raw);
+    throw new Error('Respuesta no válida de Spotify');
+  }
 }
