@@ -1,12 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
+import 'dart:convert';
 
-/// Pantalla de registro de usuario.
-/// Permite introducir datos básicos: nombre, contraseña, email, rol y fecha de nacimiento.
-/// Envía los datos al backend para crear el usuario en la base de datos.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -15,187 +11,114 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  String email = '';
-  String nom = '';
-  String contrasenya = '';
-  DateTime? selectedDate;
-  String rol = 'standard';
-  String error = '';
+  final TextEditingController nomController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController birthDateController = TextEditingController();
   bool showPassword = false;
+  String selectedRol = 'standard';
 
-  /// Formatea la fecha seleccionada a formato yyyy-MM-dd para enviarla al backend.
-  String get formattedDate {
-    if (selectedDate == null) return '';
-    return DateFormat('yyyy-MM-dd').format(selectedDate!);
-  }
-
-  /// Función que realiza la petición HTTP POST al endpoint /register.
-  /// Envía los datos del formulario al servidor para registrar el usuario.
-  Future<void> registrarUsuari() async {
-    final url = Uri.parse('http://localhost:4000/register');
-    try {
-      final resposta = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'nom': nom,
-          'contrasenya': contrasenya,
-          'rol': rol,
-          'data_naixement': formattedDate,
-        }),
-      );
-
-      final data = jsonDecode(resposta.body);
-
-      if (resposta.statusCode == 201) {
-        // Registro correcto: muestra mensaje y redirige al login.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cuenta creada correctamente')),
-        );
-        Navigator.pushReplacementNamed(context, '/login');
-      } else {
-        // Error devuelto por el backend.
-        setState(() {
-          error = data['error'] ?? 'Error desconocido al registrar';
-        });
-      }
-    } catch (e) {
-      // Error de conexión con el backend.
-      setState(() {
-        error = 'Error de conexión con el servidor';
-      });
-    }
-  }
-
-  /// Abre el selector de fecha (DatePicker).
-  Future<void> triarData(BuildContext context) async {
-    final DateTime? data = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2000),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+  void registrarUsuari() async {
+    final response = await http.post(
+      Uri.parse('http://localhost:4000/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': emailController.text,
+        'nom': nomController.text,
+        'contrasenya': passwordController.text,
+        'rol': selectedRol,
+        'data_naixement': birthDateController.text,
+      }),
     );
-    if (data != null) {
-      setState(() {
-        selectedDate = data;
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      Fluttertoast.showToast(msg: 'Usuari creat correctament!');
+      Future.delayed(const Duration(seconds: 2), () {
+        Navigator.pushReplacementNamed(context, '/login');
       });
+    } else {
+      Fluttertoast.showToast(msg: data['error'] ?? 'Error desconegut al registrar');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF42658D),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [Color(0xFF0b132b), Color(0xFF1c2541)]
+                : [Colors.blue.shade100, Colors.blue.shade300],
+          ),
+        ),
+        padding: const EdgeInsets.all(20),
         child: Center(
           child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/logo.png', height: 80),
-                const SizedBox(height: 20),
-                Text(
-                  'Crear una nueva cuenta',
-                  style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '¿Ya tienes cuenta?',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                      child: Text(
-                        'Inicia sesión',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          decoration: TextDecoration.none,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                buildTextField('Nombre de usuario', (v) => setState(() => nom = v)),
-                buildTextField('Contraseña', (v) => setState(() => contrasenya = v), isPassword: true),
-                buildTextField('Correo electrónico', (v) => setState(() => email = v)),
-                const SizedBox(height: 15),
-                // Selector de fecha de nacimiento
-                GestureDetector(
-                  onTap: () => triarData(context),
-                  child: AbsorbPointer(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Fecha de nacimiento',
-                        labelStyle: const TextStyle(color: Colors.white70),
-                        hintText: 'yyyy-mm-dd',
-                        hintStyle: const TextStyle(color: Colors.white38),
-                        enabledBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white70),
-                        ),
-                        focusedBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white),
-                        ),
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                      controller: TextEditingController(text: formattedDate),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                // Selector del tipo de cuenta
-                Theme(
-                  data: Theme.of(context).copyWith(
-                    canvasColor: Colors.blue[200],
-                  ),
-                  child: DropdownButton<String>(
-                    value: rol,
-                    dropdownColor: Colors.blue[200],
-                    style: const TextStyle(color: Colors.white),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'standard',
-                        child: Text('Standard', style: TextStyle(color: Colors.white)),
-                      ),
-                      DropdownMenuItem(
-                        value: 'premium',
-                        child: Text('Premium', style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
-                    onChanged: (value) => setState(() => rol = value!),
-                  ),
-                ),
+                Image.asset('assets/logo.png', width: 64),
                 const SizedBox(height: 10),
-                if (error.isNotEmpty)
-                  Text(error, style: const TextStyle(color: Colors.redAccent)),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: registrarUsuari,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF42658D),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                    elevation: 10,
+                Text('Crear un nou compte',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    )),
+                const SizedBox(height: 30),
+                _buildInputField('Usuari', nomController),
+                const SizedBox(height: 15),
+                _buildInputField('Correu electrònic', emailController, keyboard: TextInputType.emailAddress),
+                const SizedBox(height: 15),
+                _buildPasswordField(),
+                const SizedBox(height: 15),
+                _buildInputField('Data de naixement', birthDateController, keyboard: TextInputType.datetime),
+                const SizedBox(height: 15),
+                DropdownButtonFormField<String>(
+                  value: selectedRol,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Tipus de compte',
+                    filled: true,
                   ),
+                  items: const [
+                    DropdownMenuItem(value: 'standard', child: Text('Standard')),
+                    DropdownMenuItem(value: 'premium', child: Text('Premium')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => selectedRol = value);
+                  },
+                ),
+                const SizedBox(height: 25),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[600],
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: registrarUsuari,
+                  child: const Text(
+                    'Crear el compte',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                GestureDetector(
+                  onTap: () => Navigator.pushReplacementNamed(context, '/login'),
                   child: Text(
-                    'Crear cuenta',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    "Ja tens un compte? Inicia la sessió",
+                    style: TextStyle(
+                      color: isDark ? Colors.blue[200] : Colors.blue[600],
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
               ],
@@ -206,41 +129,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  /// Constructor de los campos del formulario con opción para contraseña visible/oculta.
-  Widget buildTextField(String label, Function(String) onChanged, {bool isPassword = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          style: const TextStyle(color: Colors.white),
-          obscureText: isPassword ? !showPassword : false,
-          decoration: InputDecoration(
-            labelText: label,
-            labelStyle: const TextStyle(color: Colors.white70),
-            enabledBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white70),
-            ),
-            focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            suffixIcon: isPassword
-                ? IconButton(
-                    icon: Icon(
-                      showPassword ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.white70,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        showPassword = !showPassword;
-                      });
-                    },
-                  )
-                : null,
-          ),
-          onChanged: onChanged,
+  Widget _buildInputField(String label, TextEditingController controller,
+      {TextInputType keyboard = TextInputType.text}) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboard,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        filled: true,
+      ),
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return TextField(
+      controller: passwordController,
+      obscureText: !showPassword,
+      decoration: InputDecoration(
+        labelText: 'Contrasenya',
+        border: const OutlineInputBorder(),
+        filled: true,
+        suffixIcon: IconButton(
+          icon: Icon(showPassword ? Icons.visibility_off : Icons.visibility),
+          onPressed: () {
+            setState(() {
+              showPassword = !showPassword;
+            });
+          },
         ),
-        const SizedBox(height: 15),
-      ],
+      ),
     );
   }
 }

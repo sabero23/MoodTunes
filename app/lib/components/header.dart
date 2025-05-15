@@ -1,98 +1,145 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../utils/session.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
-/// Componente Header reutilizable con saludo, pregunta y menú desplegable.
-/// Incluye lógica para cargar el nombre del usuario y cerrar sesión correctamente.
 class Header extends StatefulWidget implements PreferredSizeWidget {
-  const Header({super.key});
+  final String rol;
+  final String nombre;
+  final VoidCallback onLogout;
+
+  const Header({
+    super.key,
+    required this.rol,
+    required this.nombre,
+    required this.onLogout,
+  });
 
   @override
   State<Header> createState() => _HeaderState();
 
-  /// Define la altura del header (barra superior).
   @override
-  Size get preferredSize => const Size.fromHeight(80);
+  Size get preferredSize => const Size.fromHeight(56);
 }
 
 class _HeaderState extends State<Header> {
-  String nomUsuari = '';
+  bool showMenu = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _cargarNombreUsuario();
+  void toggleTheme(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+    DynamicTheme.of(context)?.setBrightness(isDark ? Brightness.light : Brightness.dark);
   }
 
-  /// Carga el nombre del usuario desde la sesión y lo guarda en el estado.
-  Future<void> _cargarNombreUsuario() async {
-    final nom = await SessionManager.getUserName();
-    setState(() {
-      nomUsuari = nom ?? 'Usuari'; // Si no hay nombre guardado, usa 'Usuari' por defecto.
-    });
+  void goTo(String route) {
+    setState(() => showMenu = false);
+    Navigator.pushNamed(context, route);
   }
 
-  /// Cierra la sesión eliminando los datos de SessionManager y redirige al login.
-  void _cerrarSesion(BuildContext context) async {
-    await SessionManager.clearSession();
-    if (mounted) { // Comprobamos que el widget sigue montado antes de navegar.
-      Navigator.pushReplacementNamed(context, '/login');
-    }
-  }
-
-  /// Construye el header visualmente.
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: const Color(0xFF42658D),
-      elevation: 0,
-      automaticallyImplyLeading: false, // Oculta el botón de volver atrás (si no es necesario).
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Benvingut, $nomUsuari 👋', // Saludo personalizado.
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Com et sents avui?', // Pregunta al usuario (el selector se implementará más adelante).
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.white70,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        /// 🔜 Botón para el selector de estado de ánimo (funcionalidad pendiente).
-        IconButton(
-          icon: const Icon(Icons.mood, color: Colors.white),
-          onPressed: () {
-            // Aquí se implementará el selector de estado de ánimo más adelante.
-          },
-        ),
+    final theme = Theme.of(context);
 
-        /// Menú desplegable con la opción de cerrar sesión.
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: Colors.white),
-          onSelected: (value) {
-            if (value == 'logout') {
-              _cerrarSesion(context);
-            }
-          },
-          itemBuilder: (context) => const [
-            PopupMenuItem(
-              value: 'logout',
-              child: Text('Tanca sessió'), // Texto del botón de cerrar sesión.
+    return Stack(
+      children: [
+        AppBar(
+          backgroundColor: Colors.black,
+          title: Row(
+            children: [
+              Image.asset('assets/logo.png', height: 30),
+              const SizedBox(width: 8),
+              const Text(
+                'MoodTunes',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(theme.brightness == Brightness.dark ? LucideIcons.sun : LucideIcons.moon),
+              onPressed: () => toggleTheme(context),
             ),
+            IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () => setState(() => showMenu = !showMenu),
+            ),
+            IconButton(
+              icon: const Icon(LucideIcons.logOut),
+              onPressed: widget.onLogout,
+            )
           ],
         ),
+        if (showMenu)
+          Positioned(
+            top: 56,
+            right: 12,
+            child: Material(
+              elevation: 6,
+              borderRadius: BorderRadius.circular(12),
+              color: theme.cardColor,
+              child: Container(
+                width: 200,
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${widget.nombre} (${widget.rol})',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    const Divider(),
+                    if (widget.rol == 'admin')
+                      TextButton(
+                        onPressed: () => goTo('/admin'),
+                        child: const Text('Admin Panel'),
+                      ),
+                    if (widget.rol == 'premium') ...[
+                      TextButton(
+                        onPressed: () => goTo('/premium'),
+                        child: const Text('Premium Page'),
+                      ),
+                      TextButton(
+                        onPressed: () => goTo('/recomanacions'),
+                        child: const Text('Recomanacions'),
+                      ),
+                    ],
+                    if (widget.rol == 'standard') ...[
+                      TextButton(
+                        onPressed: () => goTo('/standard'),
+                        child: const Text('Standard Page'),
+                      ),
+                      TextButton(
+                        onPressed: () => goTo('/recomanacions'),
+                        child: const Text('Recomanacions'),
+                      ),
+                    ],
+                    if (['standard', 'premium'].contains(widget.rol))
+                      TextButton(
+                        onPressed: () => goTo('/reproductor'),
+                        child: const Text('Reproductor'),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          )
       ],
     );
   }
+}
+
+/// Clase auxiliar para cambiar tema dinámicamente (añádelo en tu app)
+class DynamicTheme extends InheritedWidget {
+  final void Function(Brightness) setBrightness;
+
+  const DynamicTheme({
+    super.key,
+    required super.child,
+    required this.setBrightness,
+  });
+
+  static DynamicTheme? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<DynamicTheme>();
+  }
+
+  @override
+  bool updateShouldNotify(DynamicTheme oldWidget) => true;
 }

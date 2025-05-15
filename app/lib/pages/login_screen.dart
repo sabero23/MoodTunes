@@ -1,11 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
-import '../utils/session.dart';
+import 'dart:convert';
 
-/// Pantalla de Login para MoodTunes.
-/// Permite iniciar sesión, guarda la sesión del usuario y redirige según el rol.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -14,159 +11,130 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  String email = '';
-  String contrasenya = '';
-  String error = '';
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
   bool showPassword = false;
+  bool isDarkMode = false;
 
-  /// Función que realiza la petición al backend para iniciar sesión.
-  /// Si es correcto, guarda la sesión y redirige a la pantalla según el rol.
-  Future<void> iniciarSessio() async {
-    final url = Uri.parse('http://localhost:4000/login'); //  Cambiar en producción si es necesario.
-    try {
-      final resposta = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'contrasenya': contrasenya}),
-      );
+  void iniciarSesion() async {
+    final response = await http.post(
+      Uri.parse('http://localhost:4000/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': emailController.text,
+        'contrasenya': passwordController.text,
+      }),
+    );
 
-      final data = jsonDecode(resposta.body);
+    final data = jsonDecode(response.body);
 
-      if (resposta.statusCode == 200 && data['rol'] != null) {
-        //  Guarda la sesión con el token, email y rol del usuario.
-        await SessionManager.saveSession(
-          data['token'],
-          email,
-          data['rol'],
-        );
+    if (response.statusCode == 200) {
+      Fluttertoast.showToast(msg: 'Sessió iniciada correctament!');
 
-        //  Redirige automáticamente a la pantalla correspondiente según el rol.
-        Navigator.pushReplacementNamed(context, '/${data['rol']}');
-      } else {
-        setState(() {
-          error = data['error'] ?? 'Credenciales incorrectas';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        error = 'Error de conexión con el servidor';
+      final rol = data['rol'];
+      final nom = data['nom'];
+
+      // Aquí guardarías el token y el rol localmente con SharedPreferences
+      // y redirigirías a la pantalla correspondiente
+
+      Navigator.pushReplacementNamed(context, '/$rol', arguments: {
+        'nombre': nom,
+        'token': data['token'],
+        'email': emailController.text
       });
+    } else {
+      Fluttertoast.showToast(msg: data['error'] ?? 'Credencials incorrectes');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF42658D),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [Color(0xFF0b132b), Color(0xFF1c2541)]
+                : [Colors.blue.shade100, Colors.blue.shade300],
+          ),
+        ),
+        padding: const EdgeInsets.all(20),
         child: Center(
           child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/logo.png', height: 80),
-                const SizedBox(height: 20),
-                Text(
-                  'Bienvenido a MoodTunes',
-                  style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                Image.asset('assets/logo.png', width: 64),
+                const SizedBox(height: 10),
+                Text('Benvingut a MoodTunes',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    )),
+                const SizedBox(height: 30),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Correu electrònic',
+                    filled: true,
+                    border: OutlineInputBorder(),
                   ),
-                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: passwordController,
+                  obscureText: !showPassword,
+                  decoration: InputDecoration(
+                    labelText: 'Contrasenya',
+                    filled: true,
+                    border: OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                          showPassword ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () {
+                        setState(() {
+                          showPassword = !showPassword;
+                        });
+                      },
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 30),
-                buildTextField('Correo electrónico', (v) => setState(() => email = v)),
-                buildTextField('Contraseña', (v) => setState(() => contrasenya = v), isPassword: true),
-                const SizedBox(height: 10),
-                if (error.isNotEmpty)
-                  Text(error, style: const TextStyle(color: Colors.redAccent)),
-                const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: iniciarSessio,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF42658D),
+                    backgroundColor: Colors.blue[600],
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                    elevation: 10,
+                        borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: Text(
-                    'Iniciar sesión',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                  onPressed: iniciarSesion,
+                  child: const Text(
+                    'Inicia la sessió',
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '¿No tienes una cuenta?',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
+                const SizedBox(height: 15),
+                GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, '/register'),
+                  child: Text(
+                    "No tens un compte? Registra't",
+                    style: TextStyle(
+                      color: isDark ? Colors.blue[200] : Colors.blue[600],
+                      decoration: TextDecoration.underline,
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.pushReplacementNamed(context, '/register'),
-                      child: Text(
-                        'Regístrate',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          decoration: TextDecoration.none,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-
-  /// Construye un campo de texto personalizado.
-  /// Soporta modo contraseña (ocultar/mostrar).
-  Widget buildTextField(String label, Function(String) onChanged, {bool isPassword = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          style: const TextStyle(color: Colors.white),
-          obscureText: isPassword ? !showPassword : false,
-          decoration: InputDecoration(
-            labelText: label,
-            labelStyle: const TextStyle(color: Colors.white70),
-            enabledBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white70),
-            ),
-            focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            suffixIcon: isPassword
-                ? IconButton(
-                    icon: Icon(
-                      showPassword ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.white70,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        showPassword = !showPassword;
-                      });
-                    },
-                  )
-                : null,
-          ),
-          onChanged: onChanged,
-        ),
-        const SizedBox(height: 15),
-      ],
     );
   }
 }

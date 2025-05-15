@@ -11,8 +11,13 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   google_fonts: ^6.1.0
-  intl: ^0.18.1 
+  intl: ^0.18.1
   shared_preferences: ^2.2.2
+  fluttertoast: ^8.2.1
+  http: ^0.13.6
+  jwt_decoder: ^2.0.1
+  url_launcher: ^6.2.5
+  lucide_icons: ^0.1.0
 
 dev_dependencies:
   flutter_test:

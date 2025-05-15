@@ -1,100 +1,108 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../utils/session_manager.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'mood_selector_magic.dart'; // Este será tu componente animado del mood selector
 
-/// Pantalla principal para el rol 'standard'.
-/// Muestra el nombre del usuario y una pregunta sobre el estado de ánimo.
-/// Incluye menú de opciones y cierre de sesión.
-class StandardScreen extends StatefulWidget {
-  const StandardScreen({super.key});
+class StandardPage extends StatefulWidget {
+  const StandardPage({super.key});
 
   @override
-  State<StandardScreen> createState() => _StandardScreenState();
+  State<StandardPage> createState() => _StandardPageState();
 }
 
-class _StandardScreenState extends State<StandardScreen> {
-  String nomUsuari = '';
+class _StandardPageState extends State<StandardPage> {
+  String? nombre;
+  bool spotifyLinked = false;
 
   @override
   void initState() {
     super.initState();
-    _loadUserData(); // Carga el nombre del usuario al iniciar la pantalla.
+    cargarDadesUsuari();
   }
 
-  /// Carga el nombre del usuario desde la sesión guardada.
-  Future<void> _loadUserData() async {
-    final nom = await SessionManager.getUserName();
-    setState(() {
-      nomUsuari = nom ?? 'Usuari'; // Si no encuentra nombre, pone 'Usuari'.
-    });
+  void cargarDadesUsuari() async {
+    final token = await _getLocal('token');
+    final email = await _getLocal('email');
+    final nom = await _getLocal('nombre');
+
+    if (token == null || email == null) {
+      if (mounted) Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      setState(() => nombre = nom ?? 'Usuari');
+
+      final res = await http.get(
+        Uri.parse('http://localhost:4000/usuarios/info?email=$email'),
+        headers: {"Authorization": "Bearer $token"},
+      );
+
+      final data = jsonDecode(res.body);
+      if (data['spotify_refresh_token'] != null) {
+        setState(() => spotifyLinked = true);
+      }
+    }
   }
 
-  /// Cierra la sesión y redirige a la pantalla de login.
-  void logout(BuildContext context) async {
-    await SessionManager.clearSession();
-    Navigator.pushReplacementNamed(context, '/login');
+  void iniciarSpotify() async {
+    final email = await _getLocal('email');
+    if (email != null) {
+      final uri = Uri.parse('http://localhost:4000/auth/spotify?email=$email');
+      // Esto abre el navegador externo
+      if (mounted) Navigator.pushNamed(context, '/connect_spotify', arguments: uri.toString());
+    }
+  }
+
+  Future<String?> _getLocal(String key) async {
+    // Sustituir por SharedPreferences o secure_storage si lo implementas
+    return Future.value(null); // Placeholder si aún no tienes guardado nada
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF42658D),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF42658D),
-        elevation: 0,
-        automaticallyImplyLeading: false, // Evita el botón de 'volver'.
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onSelected: (value) {
-              if (value == 'logout') logout(context);
-              // Aquí se podrían añadir más acciones (ej. navegación entre pantallas).
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'reproductor', child: Text('Reproductor')),
-              const PopupMenuItem(value: 'playlist', child: Text('Playlists')),
-              const PopupMenuItem(value: 'logout', child: Text('Cerrar sesión')),
-            ],
-            color: Colors.white,
-          ),
-        ],
-      ),
+      backgroundColor: theme.colorScheme.background,
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Mensaje de bienvenida personalizado con el nombre del usuario.
             Text(
-              'Bienvenido, $nomUsuari!',
-              style: GoogleFonts.poppins(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              'Benvingut,',
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
-            // Pregunta sobre el estado de ánimo.
+            const SizedBox(height: 6),
             Text(
-              '¿Cómo te sientes hoy?',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                color: Colors.white70,
-              ),
+              nombre != null ? nombre! : 'Usuari',
+              style: theme.textTheme.headlineSmall?.copyWith(color: theme.colorScheme.primary),
             ),
-            const SizedBox(height: 15),
-            // Placeholder del selector de estado de ánimo (pendiente de implementar).
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                'Selector (próximamente)',
-                style: TextStyle(color: Color(0xFF42658D)),
-              ),
-            ),
+            const SizedBox(height: 30),
+            if (!spotifyLinked)
+              Column(
+                children: [
+                  Text(
+                    "Abans d'utilitzar el servei, has de vincular el teu compte Spotify:",
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green[500],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: iniciarSpotify,
+                    child: const Text('Iniciar sessió amb Spotify'),
+                  )
+                ],
+              )
+            else
+              const MoodSelectorMagic(),
           ],
         ),
       ),
