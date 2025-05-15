@@ -1,13 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-<<<<<<< HEAD
-import { useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/button";
-=======
 import { Button } from "../components/ui/button";
 import { toast } from "react-toastify";
->>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
 
 const moods = [
   { id: "muy_mal", label: "Muy mal", color: "from-red-500 to-red-700" },
@@ -20,51 +15,25 @@ const moods = [
 ];
 
 export default function MoodSelectorMagic() {
-<<<<<<< HEAD
   const [selectedIndex, setSelectedIndex] = useState(3); // "Normal"
-=======
-  const [selectedIndex, setSelectedIndex] = useState(2); // Regular
   const navigate = useNavigate();
->>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
   const selectedMood = moods[selectedIndex];
-  const navigate = useNavigate();
 
   const handleNext = async () => {
-<<<<<<< HEAD
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("❌ Sessió caducada. Torna a iniciar sessió.");
+      toast.error("❌ Sessió caducada. Torna a iniciar sessió.");
       navigate("/login");
       return;
     }
 
     try {
-      const res = await fetch("http://localhost:4000/mood", {
-=======
-    try {
-      const token = localStorage.getItem("token");
-
       const resposta = await fetch("http://localhost:4000/api/estat", {
->>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-<<<<<<< HEAD
-        body: JSON.stringify({ estat: selectedMood.label }),
-      });
-
-      if (res.ok) {
-        navigate("/playlists"); // o on vulguis redirigir després
-      } else {
-        const data = await res.json();
-        alert(data.error || "❌ Error al guardar estat d'ànim");
-      }
-    } catch (err) {
-      console.error("❌ Error:", err);
-      alert("Error de connexió amb el servidor.");
-=======
         body: JSON.stringify({ estat: selectedMood.id }),
       });
 
@@ -72,13 +41,13 @@ export default function MoodSelectorMagic() {
 
       if (resposta.ok) {
         toast.success("Estat d'ànim guardat!");
-        navigate("/recomanacions");
+        navigate("/recomanacions"); // ✅ Redirigir a recomanacions amb dades de Spotify
       } else {
-        toast.error(data.error || "Error al desar l'estat");
+        toast.error(data.error || "❌ Error al desar l'estat");
       }
     } catch (err) {
+      console.error(err);
       toast.error("Error de connexió amb el servidor");
->>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
     }
   };
 
@@ -106,9 +75,7 @@ export default function MoodSelectorMagic() {
         />
       </div>
 
-      <div className="text-lg font-bold text-white mb-4">
-        {selectedMood.label}
-      </div>
+      <div className="text-lg font-bold text-white mb-4">{selectedMood.label}</div>
 
       <div className="w-full mb-6">
         <input
