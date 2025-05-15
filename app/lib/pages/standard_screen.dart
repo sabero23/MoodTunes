@@ -46,10 +46,16 @@ class _StandardScreenState extends State<StandardScreen> {
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.menu, color: Colors.white),
-            onSelected: (value) {
-              if (value == 'logout') logout(context);
-              // Aquí se podrían añadir más acciones (ej. navegación entre pantallas).
-            },
+         onSelected: (value) {
+  if (value == 'logout') {
+    logout(context);
+  } else if (value == 'playlist') {
+    Navigator.pushNamed(context, '/playlists'); // ✅ Esto era lo que faltaba
+  } else if (value == 'reproductor') {
+    Navigator.pushNamed(context, '/reproductor'); // (si lo tienes implementado)
+  }
+},
+
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'reproductor', child: Text('Reproductor')),
               const PopupMenuItem(value: 'playlist', child: Text('Playlists')),

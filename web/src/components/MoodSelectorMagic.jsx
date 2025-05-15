@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "../components/ui/button"; // de shadcn
+import { useNavigate } from "react-router-dom";
+import { Button } from "../components/ui/button";
 
 const moods = [
   { id: "muy_mal", label: "Muy mal", color: "from-red-500 to-red-700" },
@@ -14,11 +15,37 @@ const moods = [
 
 export default function MoodSelectorMagic() {
   const [selectedIndex, setSelectedIndex] = useState(3); // "Normal"
-
   const selectedMood = moods[selectedIndex];
+  const navigate = useNavigate();
 
-  const handleNext = () => {
-    alert(`Has seleccionado: ${selectedMood.label}`);
+  const handleNext = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("❌ Sessió caducada. Torna a iniciar sessió.");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:4000/mood", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ estat: selectedMood.label }),
+      });
+
+      if (res.ok) {
+        navigate("/playlists"); // o on vulguis redirigir després
+      } else {
+        const data = await res.json();
+        alert(data.error || "❌ Error al guardar estat d'ànim");
+      }
+    } catch (err) {
+      console.error("❌ Error:", err);
+      alert("Error de connexió amb el servidor.");
+    }
   };
 
   return (
@@ -27,7 +54,6 @@ export default function MoodSelectorMagic() {
         ¿Cómo te has sentido en general hoy?
       </h2>
 
-      {/* Icono animado */}
       <div className="relative w-40 h-40 mx-auto mb-6">
         <AnimatePresence mode="wait">
           <motion.div
@@ -46,12 +72,10 @@ export default function MoodSelectorMagic() {
         />
       </div>
 
-      {/* Etiqueta */}
       <div className="text-lg font-bold text-white mb-4">
         {selectedMood.label}
       </div>
 
-      {/* Slider */}
       <div className="w-full mb-6">
         <input
           type="range"
@@ -67,7 +91,6 @@ export default function MoodSelectorMagic() {
         </div>
       </div>
 
-      {/* Botón */}
       <Button onClick={handleNext} className="w-full">
         Siguiente
       </Button>

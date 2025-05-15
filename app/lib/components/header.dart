@@ -77,21 +77,43 @@ class _HeaderState extends State<Header> {
           },
         ),
 
-        /// Menú desplegable con la opción de cerrar sesión.
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: Colors.white),
-          onSelected: (value) {
-            if (value == 'logout') {
-              _cerrarSesion(context);
-            }
-          },
-          itemBuilder: (context) => const [
-            PopupMenuItem(
-              value: 'logout',
-              child: Text('Tanca sessió'), // Texto del botón de cerrar sesión.
-            ),
-          ],
-        ),
+PopupMenuButton<String>(
+  icon: const Icon(Icons.more_vert, color: Colors.white),
+  onSelected: (value) {
+    switch (value) {
+      case 'logout':
+        _cerrarSesion(context);
+        break;
+      case 'playlists':
+        Navigator.pop(context); // Cierra el popup primero
+        Future.delayed(Duration(milliseconds: 100), () {
+          Navigator.pushNamed(context, '/playlists');
+        });
+        break;
+      case 'reproductor':
+        Navigator.pop(context);
+        Future.delayed(Duration(milliseconds: 100), () {
+          Navigator.pushNamed(context, '/reproductor');
+        });
+        break;
+    }
+  },
+  itemBuilder: (context) => const [
+    PopupMenuItem(
+      value: 'reproductor',
+      child: Text('Reproductor'),
+    ),
+    PopupMenuItem(
+      value: 'playlists',
+      child: Text('Playlists'),
+    ),
+    PopupMenuItem(
+      value: 'logout',
+      child: Text('Tanca sessió'),
+    ),
+  ],
+),
+
       ],
     );
   }

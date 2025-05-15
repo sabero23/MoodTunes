@@ -7,8 +7,11 @@ import StandardPage from './pages/StandardPage';
 import AccessDenied from './pages/AccessDenied';
 import { ToastContainer } from 'react-toastify';
 import ConnectSpotify from './pages/ConnectSpotify';
-import 'react-toastify/dist/ReactToastify.css';
 import Redir from "./pages/Redir";
+import PlaylistPage from "./pages/PlaylistPage"; // ✅ AFEGIT
+import PlaylistDetailPage from "./pages/PlaylistDetailPage";
+
+import 'react-toastify/dist/ReactToastify.css';
 
 function ProtectedRoute({ element, allowedRoles }) {
   const usuari = JSON.parse(localStorage.getItem('usuari'));
@@ -25,6 +28,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/denegat" element={<AccessDenied />} />
+        <Route path="/connect-spotify" element={<ConnectSpotify />} />
+        <Route path="/redir" element={<Redir />} />
 
         <Route
           path="/admin"
@@ -38,8 +43,16 @@ function App() {
           path="/standard"
           element={<ProtectedRoute allowedRoles={['standard']} element={<StandardPage />} />}
         />
-        <Route path="/connect-spotify" element={<ConnectSpotify />} />
-        <Route path="/redir" element={<Redir />} />
+
+        <Route
+          path="/playlists"
+          element={<ProtectedRoute allowedRoles={['standard', 'premium']} element={<PlaylistPage />} />}
+        />
+        {/* 👆 permet accés a standard i premium */}
+        <Route
+  path="/playlist/:id"
+  element={<ProtectedRoute allowedRoles={['standard', 'premium']} element={<PlaylistDetailPage />} />}
+/>
       </Routes>
 
       <ToastContainer
