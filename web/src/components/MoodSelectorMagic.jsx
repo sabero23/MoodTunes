@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "../components/ui/button"; // de shadcn
+import { Button } from "../components/ui/button";
+import { toast } from "react-toastify";
 
 const moods = [
   { id: "muy_mal", label: "Muy mal", color: "from-red-500 to-red-700" },
@@ -13,12 +15,34 @@ const moods = [
 ];
 
 export default function MoodSelectorMagic() {
-  const [selectedIndex, setSelectedIndex] = useState(3); // "Normal"
-
+  const [selectedIndex, setSelectedIndex] = useState(2); // Regular
+  const navigate = useNavigate();
   const selectedMood = moods[selectedIndex];
 
-  const handleNext = () => {
-    alert(`Has seleccionado: ${selectedMood.label}`);
+  const handleNext = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const resposta = await fetch("http://localhost:4000/api/estat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ estat: selectedMood.id }),
+      });
+
+      const data = await resposta.json();
+
+      if (resposta.ok) {
+        toast.success("Estat d'ànim guardat!");
+        navigate("/recomanacions");
+      } else {
+        toast.error(data.error || "Error al desar l'estat");
+      }
+    } catch (err) {
+      toast.error("Error de connexió amb el servidor");
+    }
   };
 
   return (
@@ -46,12 +70,10 @@ export default function MoodSelectorMagic() {
         />
       </div>
 
-      {/* Etiqueta */}
       <div className="text-lg font-bold text-white mb-4">
         {selectedMood.label}
       </div>
 
-      {/* Slider */}
       <div className="w-full mb-6">
         <input
           type="range"
@@ -67,7 +89,6 @@ export default function MoodSelectorMagic() {
         </div>
       </div>
 
-      {/* Botón */}
       <Button onClick={handleNext} className="w-full">
         Siguiente
       </Button>

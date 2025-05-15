@@ -1,3 +1,5 @@
+// ✅ index.js complet i definitiu
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -6,14 +8,13 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import fetch from 'node-fetch';
 import { authRequired, onlyRole } from './auth.js';
-import { getSpotifyToken } from './spotify.js';
+import { getSpotifyTokenPerUsuari } from './spotify.js';
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Conexión a MySQL
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -22,10 +23,8 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
 });
 
-// Ruta de prueba
 app.get('/', (req, res) => res.send('Backend MoodTunes OK'));
 
-// LOGIN
 app.post('/login', async (req, res) => {
   const { email, contrasenya } = req.body;
   try {
@@ -42,7 +41,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// REGISTER
 app.post('/register', async (req, res) => {
   const { email, nom, contrasenya, rol, data_naixement } = req.body;
   try {
@@ -61,34 +59,33 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// ADMIN
-app.get('/admin-data', authRequired, onlyRole('admin'), (req, res) => {
-  res.json({ mensaje: 'Datos protegidos para administradores' });
+app.get('/usuarios/info', authRequired, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const [rows] = await pool.query('SELECT id, email, nom, rol, spotify_refresh_token FROM usuaris WHERE id = ?', [userId]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Usuari no trobat' });
+
+    const token = jwt.sign({ id: rows[0].id, email: rows[0].email, rol: rows[0].rol, nom: rows[0].nom }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const necesitaSpotify = !rows[0].spotify_refresh_token;
+    res.json({ ...rows[0], token, necesitaSpotify });
+  } catch (err) {
+    res.status(500).json({ error: 'Error en obtenir dades', detalles: err.message });
+  }
 });
 
-// PREMIUM
-app.get('/premium-data', authRequired, onlyRole('premium'), (req, res) => {
-  res.json({ mensaje: 'Datos protegidos para usuarios premium' });
-});
-
-// AUTH SPOTIFY
-app.get('/auth/spotify', async (req, res) => {
+app.get('/auth/spotify', (req, res) => {
   const email = req.query.email;
   if (!email) return res.status(400).json({ error: 'Email no proporcionado' });
 
   const scope = 'user-read-private user-read-email streaming user-modify-playback-state user-read-playback-state';
   const redirectUri = encodeURIComponent(process.env.SPOTIFY_REDIRECT_URI);
-
-  const url = `https://accounts.spotify.com/authorize?response_type=code&client_id=${process.env.SPOTIFY_CLIENT_ID}&scope=${scope}&redirect_uri=${redirectUri}&state=${email}`;
+  const url = `https://accounts.spotify.com/authorize?response_type=code&client_id=${process.env.SPOTIFY_CLIENT_ID}&scope=${scope}&redirect_uri=${redirectUri}&state=${email}&show_dialog=true`;
   res.redirect(url);
 });
 
-// CALLBACK SPOTIFY
 app.get('/callback', async (req, res) => {
   const { code, state: email } = req.query;
-  if (!code || !email) {
-    return res.status(400).send('Faltan parámetros en la solicitud');
-  }
+  if (!code || !email) return res.status(400).send('Faltan parámetros');
 
   try {
     const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
@@ -105,163 +102,115 @@ app.get('/callback', async (req, res) => {
     });
 
     const tokens = await tokenRes.json();
-
-    if (tokens.error) {
-      return res.status(400).json({ error: tokens.error_description });
-    }
+    if (tokens.error) return res.status(400).json({ error: tokens.error_description });
 
     const access_token = tokens.access_token;
     const refresh_token = tokens.refresh_token;
 
     const profileRes = await fetch('https://api.spotify.com/v1/me', {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
+      headers: { Authorization: `Bearer ${access_token}` },
     });
+    const perfil = await profileRes.json();
 
-    const text = await profileRes.text();
+    await pool.query(
+      `UPDATE usuaris SET spotify_refresh_token = ?, spotify_id = ?, spotify_nom = ? WHERE email = ?`,
+      [refresh_token, perfil.id, perfil.display_name, email]
+    );
 
-    try {
-      const perfil = JSON.parse(text);
-      const spotify_id = perfil.id;
-      const spotify_nom = perfil.display_name;
-
-      await pool.query(
-        `UPDATE usuaris 
-         SET spotify_refresh_token = ?, spotify_id = ?, spotify_nom = ?
-         WHERE email = ?`,
-        [refresh_token, spotify_id, spotify_nom, email]
-      );
-
-      res.redirect(`http://localhost:5173/redir?email=${email}`);
-    } catch (err) {
-      console.error('Error en parseig JSON Spotify:', text);
-      res.status(500).json({
-        error: 'Error al obtener datos del usuario Spotify',
-        detalles: text,
-      });
-    }
+    const [rows] = await pool.query("SELECT rol FROM usuaris WHERE email = ?", [email]);
+    const rol = rows.length ? rows[0].rol : 'login';
+    res.redirect(`http://localhost:5173/${rol}`);
   } catch (err) {
     res.status(500).json({ error: 'Error al conectar con Spotify', detalles: err.message });
   }
 });
 
-// REFRESH TOKEN
-app.post('/spotify/refresh', async (req, res) => {
-  const { refresh_token } = req.body;
-
-  try {
-    const response = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        Authorization: 'Basic ' + Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64'),
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token,
-      }),
-    });
-
-    const data = await response.json();
-    if (data.error) {
-      return res.status(400).json({ error: data.error_description });
-    }
-
-    res.json({
-      access_token: data.access_token,
-      expires_in: data.expires_in,
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Error al renovar el token', detalles: err.message });
-  }
-});
-
-// TOKEN SPOTIFY directo
-app.get('/spotify/token', async (req, res) => {
-  try {
-    const token = await getSpotifyToken();
-    res.json({ token });
-  } catch (err) {
-    res.status(500).json({ error: 'Error al obtener el token de Spotify', detalles: err.message });
-  }
-});
-
-// INFO USUARIO
-app.get('/usuarios/info', async (req, res) => {
-  const { email } = req.query;
-  try {
-    const [rows] = await pool.query('SELECT id, email, nom, rol, spotify_refresh_token FROM usuaris WHERE email = ?', [email]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Usuari no trobat' });
-
-    const token = jwt.sign({ id: rows[0].id, email: rows[0].email, rol: rows[0].rol, nom: rows[0].nom }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ ...rows[0], token });
-  } catch (err) {
-    res.status(500).json({ error: 'Error en obtenir dades', detalles: err.message });
-  }
-});
-
-// CREAR PLAYLIST
-app.post('/playlists', authRequired, async (req, res) => {
-  const { nom, descripcio } = req.body;
+app.post('/api/estat', authRequired, async (req, res) => {
   const userId = req.user.id;
-
-  if (!nom || nom.trim() === "") {
-    return res.status(400).json({ error: 'El nom de la playlist és obligatori' });
-  }
+  const { estat } = req.body;
+  const opcions = ["muy_mal", "mal", "algo_mal", "normal", "bien", "muy_bien", "motivado"];
+  if (!opcions.includes(estat)) return res.status(400).json({ error: "Estat d’ànim no vàlid" });
 
   try {
-    const [result] = await pool.query(
-      'INSERT INTO playlists (user_id, nom, descripcio) VALUES (?, ?, ?)',
-      [userId, nom.trim(), descripcio]
-    );
-
-    res.status(201).json({
-      missatge: 'Playlist creada correctament',
-      id: result.insertId
-    });
+    await pool.query("INSERT INTO estats_anim (user_id, estat) VALUES (?, ?)", [userId, estat]);
+    res.status(200).json({ missatge: "Estat d’ànim guardat correctament" });
   } catch (err) {
-    res.status(500).json({ error: 'Error en crear la playlist', detalls: err.message });
+    res.status(500).json({ error: "Error en guardar l’estat d’ànim", detalls: err.message });
   }
 });
 
-// OBTENIR PLAYLISTS
-app.get('/playlists', authRequired, async (req, res) => {
+app.get("/api/recomanacions", authRequired, async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const [playlists] = await pool.query(
-      'SELECT id, nom, descripcio, created_at FROM playlists WHERE user_id = ?',
+    // 1. Obtenir l'últim estat d'ànim
+    const [estatRows] = await pool.query(
+      "SELECT estat FROM estats_anim WHERE user_id = ? ORDER BY data DESC LIMIT 1",
       [userId]
     );
+    if (estatRows.length === 0) {
+      return res.status(404).json({ error: "No hi ha estat d’ànim registrat" });
+    }
+    const estat = estatRows[0].estat;
 
-    res.json({ playlists });
-  } catch (err) {
-    console.error('Error al obtenir playlists:', err);
-    res.status(500).json({ error: 'Error en obtenir les playlists', detalls: err.message });
-  }
-});
-
-// ELIMINAR PLAYLIST
-app.delete('/playlists/:id', authRequired, async (req, res) => {
-  const userId = req.user.id;
-  const playlistId = req.params.id;
-
-  try {
-    const [result] = await pool.query(
-      'DELETE FROM playlists WHERE id = ? AND user_id = ?',
-      [playlistId, userId]
+    // 2. Obtenir el rol i refresh_token
+    const [usuariRows] = await pool.query(
+      "SELECT rol, spotify_refresh_token FROM usuaris WHERE id = ?",
+      [userId]
     );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Playlist no trobada o no teva' });
+    if (!usuariRows.length || !usuariRows[0].spotify_refresh_token) {
+      return res.status(400).json({ error: "Usuari sense refresh token de Spotify" });
     }
 
-    res.json({ ok: true, missatge: 'Playlist eliminada' });
+    const { rol } = usuariRows[0];
+    const limit = rol === "premium" ? 10 : 3;
+
+    const access_token = await getSpotifyTokenPerUsuari(userId);
+
+    const moodToGenre = {
+      muy_mal: "sad",
+      mal: "emo",
+      algo_mal: "acoustic",
+      normal: "pop",
+      bien: "dance",
+      muy_bien: "happy",
+      motivado: "work-out",
+    };
+    const seedGenre = moodToGenre[estat] || "pop";
+
+    // 3. Crida a Spotify
+    const response = await fetch(`https://api.spotify.com/v1/recommendations?limit=${limit}&seed_genres=${seedGenre}`, {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    const raw = await response.text(); // Per si no és JSON
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (err) {
+      console.error("📦 Spotify RAW Response:", raw);
+      console.error("❌ No es JSON vàlid:", err);
+      return res.status(500).json({ error: "Resposta no vàlida de Spotify" });
+    }
+
+    if (!data.tracks || !Array.isArray(data.tracks)) {
+      return res.status(500).json({ error: "No s’han pogut obtenir recomanacions" });
+    }
+
+    // 4. Guardar recomanacions a la base de dades
+    for (const track of data.tracks) {
+      await pool.query(
+        "INSERT INTO recomanacions (user_id, estat_anim, canco_id, nom_canco, artista) VALUES (?, ?, ?, ?, ?)",
+        [userId, estat, track.id, track.name, track.artists[0]?.name || "Sense artista"]
+      );
+    }
+
+    res.json({ recomanacions: data.tracks });
   } catch (err) {
-    res.status(500).json({ error: 'Error al eliminar playlist', detalls: err.message });
+    console.error("❌ Error recomanacions:", err);
+    res.status(500).json({ error: "Error en obtenir recomanacions", detalls: err.message });
   }
 });
 
-// INICI SERVIDOR
-app.listen(4000, '0.0.0.0', () => console.log('Backend escuchando en el puerto 4000'));
+app.listen(4000, '0.0.0.0', () => console.log('✅ Backend escoltant al port 4000'));

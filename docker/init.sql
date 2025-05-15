@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS usuaris;
 
 -- Taula 'usuaris'
 CREATE TABLE usuaris (
-  id INT AUTO_INCREMENT PRIMARY KEY,                          -- ID autoincremental
+  id INT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(100) UNIQUE NOT NULL,
   nom VARCHAR(100) NOT NULL,
   contrasenya VARCHAR(100) NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE estats_anim (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  estat ENUM('molt malament', 'malament', 'regular', 'bé', 'molt bé'),
+  estat ENUM('muy_mal', 'mal', 'algo_mal', 'normal', 'bien', 'muy_bien', 'motivado'),
   FOREIGN KEY (user_id) REFERENCES usuaris(id) ON DELETE CASCADE
 );
 
@@ -37,7 +37,7 @@ CREATE TABLE recomanacions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  estat_anim ENUM('molt malament', 'malament', 'regular', 'bé', 'molt bé'),
+  estat_anim ENUM('muy_mal', 'mal', 'algo_mal', 'normal', 'bien', 'muy_bien', 'motivado'),
   canco_id VARCHAR(100),
   nom_canco VARCHAR(255),
   artista VARCHAR(255),

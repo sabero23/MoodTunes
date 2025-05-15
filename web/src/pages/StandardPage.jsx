@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
 import MoodSelectorMagic from "../components/MoodSelectorMagic";
 
 export default function StandardPage() {
@@ -18,7 +17,9 @@ export default function StandardPage() {
     } else {
       setNombre(nombreGuardado || "Usuari");
 
-      fetch(`http://localhost:4000/usuarios/info?email=${email}`)
+      fetch(`http://localhost:4000/usuarios/info?email=${email}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
         .then((res) => res.json())
         .then((data) => {
           if (data.spotify_refresh_token) {
@@ -30,12 +31,13 @@ export default function StandardPage() {
 
   const loginSpotify = () => {
     const email = localStorage.getItem("email");
-    window.location.href = `http://localhost:4000/auth/spotify?email=${email}`;
+    if (email) {
+      window.location.href = `http://localhost:4000/auth/spotify?email=${email}`;
+    }
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header />
       <div className="flex flex-col items-center justify-center px-4 py-10">
         <h1 className="text-2xl font-bold mb-2 text-center">
           Benvingut, <span className="text-primary">{nombre}</span>
