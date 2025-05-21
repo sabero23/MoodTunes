@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   # BACKEND (Node.js + Express)
   backend:
@@ -18,8 +19,9 @@ services:
       - JWT_SECRET=d8239f2c1e234f89aaf81239c8123adkfhajshdlkh213
       - SPOTIFY_CLIENT_ID=d26f719218454a13b88ba2f15ee233b7
       - SPOTIFY_CLIENT_SECRET=0b80c77971af4453b245cf8cec605f78
-      - SPOTIFY_REDIRECT_URI=https://9cab-90-161-233-110.ngrok-free.app/callback
-
+      - SPOTIFY_REDIRECT_URI=https://36a0-212-81-161-82.ngrok-free.app/callback
+      - FRONTEND_URL=http://localhost:5173
+      - PORT=4000
 
   # BASE DE DADES (MySQL)
   db:
@@ -57,8 +59,7 @@ services:
     depends_on:
       - backend
     environment:
-      - VITE_API_URL=
+      - VITE_API_URL=http://localhost:4000
 
 volumes:
   mysql_data:
-

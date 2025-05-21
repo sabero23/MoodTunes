@@ -20,7 +20,12 @@ class _RecomanacionsPageState extends State<RecomanacionsPage> {
 
   Future<void> carregarRecomanacions() async {
     final token = await _getLocal('token');
-    if (token == null) return Navigator.pushReplacementNamed(context, '/login');
+    if (token == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/login');
+      });
+      return;
+    }
 
     final res = await http.get(
       Uri.parse('http://localhost:4000/api/recomanacions'),
@@ -57,7 +62,8 @@ class _RecomanacionsPageState extends State<RecomanacionsPage> {
             const SizedBox(height: 10),
             Text(
               "Recomanacions musicals",
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             if (recomanacions.isEmpty)
@@ -103,7 +109,8 @@ class _RecomanacionsPageState extends State<RecomanacionsPage> {
                             ),
                             Text(
                               canco['artista'],
-                              style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                              style: theme.textTheme.bodySmall
+                                  ?.copyWith(color: theme.hintColor),
                               overflow: TextOverflow.ellipsis,
                             ),
                             const Spacer(),

@@ -1,61 +1,67 @@
-// src/pages/RecomanacionsPage.jsx
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FiArrowLeft } from "react-icons/fi";
+// RecomanacionsPage.jsx amb estètica Magic UI
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { Music } from 'lucide-react';
 
 export default function RecomanacionsPage() {
-  const [recomanacions, setRecomanacions] = useState([]);
+  const [cancons, setCancons] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return navigate("/login");
+    const token = localStorage.getItem('token');
+    if (!token) return navigate('/login');
 
-    fetch("http://localhost:4000/api/recomanacions", {
-      headers: { Authorization: `Bearer ${token}` },
+    fetch('http://localhost:4000/api/recomanacions', {
+      headers: { Authorization: 'Bearer ' + token },
     })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.recomanacions) setRecomanacions(data.recomanacions);
+      .then(async res => {
+        const data = await res.json();
+        if (!res.ok) throw data;
+        setCancons(data.recomanacions);
       })
-      .catch((err) => console.error("Error obtenint recomanacions:", err));
-  }, [navigate]);
+      .catch(err => {
+        console.error('Error HTTP recomanacions:', err);
+        toast.error(err.error || 'Error al carregar recomanacions');
+      });
+  }, []);
 
   return (
-    <div className="min-h-screen px-6 py-8 bg-background text-foreground">
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 flex items-center gap-2 text-sm font-medium bg-muted px-3 py-1.5 rounded hover:bg-muted/80 transition"
-      >
-        <FiArrowLeft /> Tornar
-      </button>
+    <div style={{ padding: '2rem', backgroundColor: '#0f172a', minHeight: '100vh', color: 'white' }}>
+      <h1 style={{ fontSize: '1.75rem', fontWeight: 'bold', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <Music size={24} /> Recomanacions segons el teu estat d'ànim
+      </h1>
 
-      <h2 className="text-2xl font-bold mb-6">Recomanacions musicals</h2>
-
-      {recomanacions.length === 0 ? (
-        <p>No s'han trobat recomanacions.</p>
-      ) : (
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {recomanacions.map((canco, index) => (
-            <div
-              key={index}
-              className="bg-card rounded-xl shadow-lg p-4 hover:shadow-xl transition cursor-pointer"
-              onClick={() => navigate("/reproductor", { state: { canco } })}
-            >
-              <div className="text-lg font-semibold">{canco.nom_canco}</div>
-              <div className="text-sm text-muted-foreground">{canco.artista}</div>
-              <a
-                href={`https://open.spotify.com/track/${canco.canco_id}`}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 inline-block text-sm text-primary hover:underline"
-              >
-                Obrir a Spotify
-              </a>
-            </div>
-          ))}
-        </div>
-      )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+        {cancons.map((canco, i) => (
+          <div key={i} style={{
+            background: 'linear-gradient(to bottom right, #1e3a8a, #0f172a)',
+            borderRadius: '1rem',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+            padding: '1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center'
+          }}>
+            <img src={canco.album?.images?.[0]?.url} alt={canco.name} style={{ width: '100%', borderRadius: '0.75rem', marginBottom: '0.75rem' }} />
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600' }}>{canco.name}</h2>
+            <p style={{ fontSize: '0.875rem', color: '#cbd5e1' }}>{canco.artists?.[0]?.name}</p>
+            <a href={canco.external_urls?.spotify} target="_blank" rel="noreferrer"
+              style={{
+                marginTop: '0.75rem',
+                display: 'inline-block',
+                padding: '0.5rem 1rem',
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                borderRadius: '0.5rem',
+                textDecoration: 'none'
+              }}>
+              Escolta-la a Spotify
+            </a>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

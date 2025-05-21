@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 /// Widget que permite alternar entre tema claro y oscuro
 class ThemeToggle extends StatelessWidget {
@@ -21,7 +20,7 @@ class ThemeToggle extends StatelessWidget {
       right: 16,
       child: IconButton(
         tooltip: 'Canviar tema',
-        icon: Icon(isDark ? LucideIcons.sun : LucideIcons.moon),
+        icon: Icon(isDark ? Icons.wb_sunny_outlined : Icons.nights_stay_outlined),
         onPressed: () => onToggle(isDark ? Brightness.light : Brightness.dark),
         style: ButtonStyle(
           backgroundColor: MaterialStatePropertyAll(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 class Header extends StatefulWidget implements PreferredSizeWidget {
   final String rol;
@@ -54,7 +53,11 @@ class _HeaderState extends State<Header> {
           ),
           actions: [
             IconButton(
-              icon: Icon(theme.brightness == Brightness.dark ? LucideIcons.sun : LucideIcons.moon),
+              icon: Icon(
+                theme.brightness == Brightness.dark
+                    ? Icons.wb_sunny_outlined
+                    : Icons.nightlight_outlined,
+              ),
               onPressed: () => toggleTheme(context),
             ),
             IconButton(
@@ -62,7 +65,7 @@ class _HeaderState extends State<Header> {
               onPressed: () => setState(() => showMenu = !showMenu),
             ),
             IconButton(
-              icon: const Icon(LucideIcons.logOut),
+              icon: const Icon(Icons.logout),
               onPressed: widget.onLogout,
             )
           ],
@@ -126,7 +129,7 @@ class _HeaderState extends State<Header> {
   }
 }
 
-/// Clase auxiliar para cambiar tema dinámicamente (añádelo en tu app)
+/// Clase auxiliar para cambiar tema dinámicamente
 class DynamicTheme extends InheritedWidget {
   final void Function(Brightness) setBrightness;
 

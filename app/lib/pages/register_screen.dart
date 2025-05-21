@@ -11,35 +11,34 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController nomController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController birthDateController = TextEditingController();
   bool showPassword = false;
-  String selectedRol = 'standard';
 
   void registrarUsuari() async {
-    final response = await http.post(
-      Uri.parse('http://localhost:4000/register'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': emailController.text,
-        'nom': nomController.text,
-        'contrasenya': passwordController.text,
-        'rol': selectedRol,
-        'data_naixement': birthDateController.text,
-      }),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:4000/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': emailController.text,
+          'nom': nameController.text,
+          'contrasenya': passwordController.text,
+        }),
+      );
 
-    final data = jsonDecode(response.body);
+      final data = jsonDecode(response.body);
 
-    if (response.statusCode == 201) {
-      Fluttertoast.showToast(msg: 'Usuari creat correctament!');
-      Future.delayed(const Duration(seconds: 2), () {
-        Navigator.pushReplacementNamed(context, '/login');
-      });
-    } else {
-      Fluttertoast.showToast(msg: data['error'] ?? 'Error desconegut al registrar');
+      if (response.statusCode == 200) {
+        Fluttertoast.showToast(msg: 'Registre completat!');
+        if (mounted) Navigator.pushReplacementNamed(context, '/login');
+      } else {
+        Fluttertoast.showToast(msg: data['error'] ?? 'Error en el registre');
+      }
+    } catch (e) {
+      Fluttertoast.showToast(msg: 'Error de connexió amb el servidor');
+      print('Register error: $e');
     }
   }
 
@@ -55,7 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: isDark
-                ? [Color(0xFF0b132b), Color(0xFF1c2541)]
+                ? [const Color(0xFF0b132b), const Color(0xFF1c2541)]
                 : [Colors.blue.shade100, Colors.blue.shade300],
           ),
         ),
@@ -67,46 +66,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 Image.asset('assets/logo.png', width: 64),
                 const SizedBox(height: 10),
-                Text('Crear un nou compte',
+                Text('Crear un compte',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black87,
                     )),
                 const SizedBox(height: 30),
-                _buildInputField('Usuari', nomController),
-                const SizedBox(height: 15),
-                _buildInputField('Correu electrònic', emailController, keyboard: TextInputType.emailAddress),
-                const SizedBox(height: 15),
-                _buildPasswordField(),
-                const SizedBox(height: 15),
-                _buildInputField('Data de naixement', birthDateController, keyboard: TextInputType.datetime),
-                const SizedBox(height: 15),
-                DropdownButtonFormField<String>(
-                  value: selectedRol,
+                TextField(
+                  controller: nameController,
                   decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Tipus de compte',
+                    labelText: 'Nom complet',
                     filled: true,
+                    border: OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'standard', child: Text('Standard')),
-                    DropdownMenuItem(value: 'premium', child: Text('Premium')),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) setState(() => selectedRol = value);
-                  },
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Correu electrònic',
+                    filled: true,
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: passwordController,
+                  obscureText: !showPassword,
+                  decoration: InputDecoration(
+                    labelText: 'Contrasenya',
+                    filled: true,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                          showPassword ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () {
+                        setState(() {
+                          showPassword = !showPassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[600],
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: registrarUsuari,
                   child: const Text(
-                    'Crear el compte',
+                    'Registrar-me',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -114,7 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pushReplacementNamed(context, '/login'),
                   child: Text(
-                    "Ja tens un compte? Inicia la sessió",
+                    'Ja tens un compte? Inicia sessió',
                     style: TextStyle(
                       color: isDark ? Colors.blue[200] : Colors.blue[600],
                       decoration: TextDecoration.underline,
@@ -124,39 +137,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInputField(String label, TextEditingController controller,
-      {TextInputType keyboard = TextInputType.text}) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboard,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        filled: true,
-      ),
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return TextField(
-      controller: passwordController,
-      obscureText: !showPassword,
-      decoration: InputDecoration(
-        labelText: 'Contrasenya',
-        border: const OutlineInputBorder(),
-        filled: true,
-        suffixIcon: IconButton(
-          icon: Icon(showPassword ? Icons.visibility_off : Icons.visibility),
-          onPressed: () {
-            setState(() {
-              showPassword = !showPassword;
-            });
-          },
         ),
       ),
     );

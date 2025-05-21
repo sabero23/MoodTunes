@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../utils/session_manager.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,36 +14,58 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool showPassword = false;
-  bool isDarkMode = false;
 
   void iniciarSesion() async {
-    final response = await http.post(
-      Uri.parse('http://localhost:4000/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': emailController.text,
-        'contrasenya': passwordController.text,
-      }),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:4000/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': emailController.text,
+          'contrasenya': passwordController.text,
+        }),
+      );
 
-    final data = jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+      print("Res status: ${response.statusCode}");
+      print("Res body: ${response.body}");
 
-    if (response.statusCode == 200) {
-      Fluttertoast.showToast(msg: 'Sessió iniciada correctament!');
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sessió iniciada correctament!')),
+        );
 
-      final rol = data['rol'];
-      final nom = data['nom'];
+        await SessionManager.saveSession(
+          token: data['token'],
+          email: emailController.text,
+          rol: data['rol'],
+          nombre: data['nom'],
+        );
 
-      // Aquí guardarías el token y el rol localmente con SharedPreferences
-      // y redirigirías a la pantalla correspondiente
-
-      Navigator.pushReplacementNamed(context, '/$rol', arguments: {
-        'nombre': nom,
-        'token': data['token'],
-        'email': emailController.text
-      });
-    } else {
-      Fluttertoast.showToast(msg: data['error'] ?? 'Credencials incorrectes');
+        final rol = data['rol'];
+        if (mounted) {
+          if (rol == 'standard') {
+            Navigator.pushReplacementNamed(context, '/standard');
+          } else if (rol == 'premium') {
+            Navigator.pushReplacementNamed(context, '/premium');
+          } else if (rol == 'admin') {
+            Navigator.pushReplacementNamed(context, '/admin');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Rol desconegut.')),
+            );
+          }
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['error'] ?? 'Credencials incorrectes')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error de connexió amb el servidor')),
+      );
+      print('Login error: $e');
     }
   }
 
@@ -59,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: isDark
-                ? [Color(0xFF0b132b), Color(0xFF1c2541)]
+                ? [const Color(0xFF0b132b), const Color(0xFF1c2541)]
                 : [Colors.blue.shade100, Colors.blue.shade300],
           ),
         ),
@@ -79,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 30),
                 TextField(
                   controller: emailController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Correu electrònic',
                     filled: true,
                     border: OutlineInputBorder(),
@@ -92,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     labelText: 'Contrasenya',
                     filled: true,
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(
                           showPassword ? Icons.visibility_off : Icons.visibility),

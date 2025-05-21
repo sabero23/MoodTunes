@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moodtunes/components/header.dart';
+import 'header.dart'; 
 
 class AppLayout extends StatelessWidget {
   final Widget child;
@@ -17,12 +17,14 @@ class AppLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final PreferredSizeWidget headerAppBar = Header(
+      rol: rol,
+      nombre: nombre,
+      onLogout: onLogout,
+    );
+
     return Scaffold(
-      appBar: Header(
-        rol: rol,
-        nombre: nombre,
-        onLogout: onLogout,
-      ),
+      appBar: headerAppBar,
       body: Container(
         padding: const EdgeInsets.all(16),
         color: Theme.of(context).colorScheme.background,

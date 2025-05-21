@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 class AccessDeniedPage extends StatelessWidget {
   const AccessDeniedPage({super.key});
@@ -19,7 +18,7 @@ class AccessDeniedPage extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: isDark
               ? [const Color(0xFF1a1a1a), const Color(0xFF2b2b2b)]
-              : [Colors.blue.shade100, Colors.slate.shade100],
+              : [Colors.blue.shade100, Colors.lightBlue.shade50],
           ),
         ),
         child: Center(
@@ -44,7 +43,7 @@ class AccessDeniedPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
-                  LucideIcons.alertTriangle,
+                  Icons.warning_amber_rounded,
                   color: Colors.red,
                   size: 48,
                 ),

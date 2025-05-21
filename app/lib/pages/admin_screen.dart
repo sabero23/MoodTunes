@@ -22,9 +22,9 @@ class _AdminScreenState extends State<AdminScreen> {
 
   /// Carga el nombre del usuario desde la sesión y lo guarda en el estado.
   Future<void> _cargarDatosUsuario() async {
-    final nom = await SessionManager.getUserName();
+    //final nom = await SessionManager.getUserName();
     setState(() {
-      nomUsuari = nom ?? 'Usuari'; // Si no hay nombre guardado, usa 'Usuari' por defecto.
+      //nomUsuari = nom ?? 'Usuari'; // Si no hay nombre guardado, usa 'Usuari' por defecto.
     });
   }
 

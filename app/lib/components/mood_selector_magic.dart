@@ -12,7 +12,7 @@ class MoodSelectorMagic extends StatefulWidget {
 
 class _MoodSelectorMagicState extends State<MoodSelectorMagic>
     with SingleTickerProviderStateMixin {
-  int selectedIndex = 2; // Valor por defecto
+  int selectedIndex = 2;
 
   final moods = [
     {'id': 'muy_mal', 'label': 'Muy mal', 'color': [Colors.red, Colors.redAccent]},
@@ -25,7 +25,7 @@ class _MoodSelectorMagicState extends State<MoodSelectorMagic>
   ];
 
   void handleNext() async {
-    final selectedMood = moods[selectedIndex];
+    final Map<String, dynamic> selectedMood = moods[selectedIndex];
     final token = await _getLocalToken();
 
     final res = await http.post(
@@ -48,13 +48,15 @@ class _MoodSelectorMagicState extends State<MoodSelectorMagic>
   }
 
   Future<String?> _getLocalToken() async {
-    return Future.value(null); // Reemplazar con SharedPreferences o secure_storage
+    return Future.value(null); // Reemplaza con SharedPreferences si quieres
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final selectedMood = moods[selectedIndex];
+    final Map<String, dynamic> selectedMood = moods[selectedIndex];
+    final firstMoodLabel = (moods.first as Map<String, dynamic>)['label'];
+    final lastMoodLabel = (moods.last as Map<String, dynamic>)['label'];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -103,8 +105,8 @@ class _MoodSelectorMagicState extends State<MoodSelectorMagic>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(moods.first['label'], style: const TextStyle(color: Colors.white70)),
-              Text(moods.last['label'], style: const TextStyle(color: Colors.white70)),
+              Text(firstMoodLabel, style: const TextStyle(color: Colors.white70)),
+              Text(lastMoodLabel, style: const TextStyle(color: Colors.white70)),
             ],
           ),
           const SizedBox(height: 24),

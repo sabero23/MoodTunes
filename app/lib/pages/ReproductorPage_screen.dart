@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 class ReproductorPage extends StatelessWidget {
   final Map<String, dynamic> canco;
@@ -97,7 +96,7 @@ class ReproductorPage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
-                            icon: const Icon(LucideIcons.skipBack),
+                            icon: const Icon(Icons.skip_previous),
                             onPressed: () {},
                           ),
                           const SizedBox(width: 16),
@@ -107,14 +106,14 @@ class ReproductorPage extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
-                              icon: const Icon(LucideIcons.play),
+                              icon: const Icon(Icons.play_arrow),
                               onPressed: () {},
                               color: Colors.white,
                             ),
                           ),
                           const SizedBox(width: 16),
                           IconButton(
-                            icon: const Icon(LucideIcons.skipForward),
+                            icon: const Icon(Icons.skip_next),
                             onPressed: () {},
                           ),
                         ],

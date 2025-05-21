@@ -35,6 +35,7 @@ export default function MoodSelectorMagic() {
       const data = await resposta.json();
 
       if (resposta.ok) {
+        localStorage.setItem("estat", selectedMood.id); // 🔁 AFEGIT
         toast.success("Estat d'ànim guardat!");
         navigate("/recomanacions");
       } else {
@@ -44,6 +45,7 @@ export default function MoodSelectorMagic() {
       toast.error("Error de connexió amb el servidor");
     }
   };
+
 
   return (
     <div className="w-full max-w-md mx-auto text-center p-6">

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -13,18 +14,19 @@ class _ConnectSpotifyPageState extends State<ConnectSpotifyPage> {
   @override
   void initState() {
     super.initState();
-    _redirigirASpotify();
+    _launchSpotifyAuth();
   }
 
-  Future<void> _redirigirASpotify() async {
-    final url = Uri.parse('http://localhost:4000/auth/spotify?email=${widget.email}');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No s’ha pogut obrir Spotify')),
-      );
+  Future<void> _launchSpotifyAuth() async {
+    final uri = Uri.parse('http://localhost:4000/auth/spotify?email=${widget.email}');
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
+
+    // Esperem uns segons i tornem enrere per refrescar el parent
+    await Future.delayed(const Duration(seconds: 4));
+    if (mounted) Navigator.pop(context, true);
   }
 
   @override
@@ -32,7 +34,8 @@ class _ConnectSpotifyPageState extends State<ConnectSpotifyPage> {
     return const Scaffold(
       body: Center(
         child: Text(
-          'Redirigint a Spotify...'
+          'Redirigint a Spotify...',
+          style: TextStyle(fontSize: 16),
         ),
       ),
     );

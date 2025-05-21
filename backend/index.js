@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import fetch from 'node-fetch';
 import { authRequired, onlyRole } from './auth.js';
-import { getSpotifyTokenPerUsuari } from './spotify.js';
+import { getSpotifyTokenPerUsuari, getTopArtists, getTopTracks } from './spotify.js';
 
 dotenv.config();
 const app = express();
@@ -77,7 +77,7 @@ app.get('/auth/spotify', (req, res) => {
   const email = req.query.email;
   if (!email) return res.status(400).json({ error: 'Email no proporcionado' });
 
-  const scope = 'user-read-private user-read-email streaming user-modify-playback-state user-read-playback-state';
+  const scope = 'user-read-private user-read-email streaming user-modify-playback-state user-read-playback-state user-top-read';
   const redirectUri = encodeURIComponent(process.env.SPOTIFY_REDIRECT_URI);
   const url = `https://accounts.spotify.com/authorize?response_type=code&client_id=${process.env.SPOTIFY_CLIENT_ID}&scope=${scope}&redirect_uri=${redirectUri}&state=${email}&show_dialog=true`;
   res.redirect(url);
@@ -139,78 +139,106 @@ app.post('/api/estat', authRequired, async (req, res) => {
   }
 });
 
-app.get("/api/recomanacions", authRequired, async (req, res) => {
+app.get('/api/recomanacions', authRequired, async (req, res) => {
   const userId = req.user.id;
-
   try {
-    // 1. Obtenir l'últim estat d'ànim
-    const [estatRows] = await pool.query(
-      "SELECT estat FROM estats_anim WHERE user_id = ? ORDER BY data DESC LIMIT 1",
+    // 1) Último mood
+    const [[{ estat }]] = await pool.query(
+      'SELECT estat FROM estats_anim WHERE user_id = ? ORDER BY `data` DESC LIMIT 1',
       [userId]
     );
-    if (estatRows.length === 0) {
-      return res.status(404).json({ error: "No hi ha estat d’ànim registrat" });
-    }
-    const estat = estatRows[0].estat;
+    const limit = req.user.rol === 'premium' ? 10 : 3;
 
-    // 2. Obtenir el rol i refresh_token
-    const [usuariRows] = await pool.query(
-      "SELECT rol, spotify_refresh_token FROM usuaris WHERE id = ?",
-      [userId]
-    );
-    if (!usuariRows.length || !usuariRows[0].spotify_refresh_token) {
-      return res.status(400).json({ error: "Usuari sense refresh token de Spotify" });
-    }
-
-    const { rol } = usuariRows[0];
-    const limit = rol === "premium" ? 10 : 3;
-
+    // 2) Token Spotify
     const access_token = await getSpotifyTokenPerUsuari(userId);
 
-    const moodToGenre = {
-      muy_mal: "sad",
-      mal: "emo",
-      algo_mal: "acoustic",
-      normal: "pop",
-      bien: "dance",
-      muy_bien: "happy",
-      motivado: "work-out",
-    };
-    const seedGenre = moodToGenre[estat] || "pop";
-
-    // 3. Crida a Spotify
-    const response = await fetch(`https://api.spotify.com/v1/recommendations?limit=${limit}&seed_genres=${seedGenre}`, {
-      headers: { Authorization: `Bearer ${access_token}` },
-    });
-
-    const raw = await response.text(); // Per si no és JSON
-
-    let data;
+    // 3) Semillas: pistas, o artistas si no hay pistas
+    let seeds = [];
     try {
-      data = JSON.parse(raw);
-    } catch (err) {
-      console.error("📦 Spotify RAW Response:", raw);
-      console.error("❌ No es JSON vàlid:", err);
-      return res.status(500).json({ error: "Resposta no vàlida de Spotify" });
+      seeds = (await getTopTracks(access_token)).slice(0, 5);
+    } catch {
+      seeds = (await getTopArtists(access_token)).slice(0, 5);
     }
+    if (!seeds.length) throw new Error('Sin semillas de usuario');
 
-    if (!data.tracks || !Array.isArray(data.tracks)) {
-      return res.status(500).json({ error: "No s’han pogut obtenir recomanacions" });
+    // 4) Filtros de audio según mood
+    const moodToAudio = {
+      muy_mal:  { max_valence: 0.2, max_energy: 0.2 },
+      mal:      { max_valence: 0.3, max_energy: 0.4 },
+      algo_mal: { max_valence: 0.4, max_energy: 0.5 },
+      normal:   { min_valence: 0.4, max_valence: 0.6 },
+      bien:     { min_valence: 0.6, min_energy: 0.5 },
+      muy_bien: { min_valence: 0.8, min_energy: 0.6 },
+      motivado: { min_energy: 0.7, min_tempo: 100 },
+    };
+    const audioParams = moodToAudio[estat] || {};
+    const featureString = Object.entries(audioParams)
+      .map(([k,v]) => `&${k}=${v}`)
+      .join('');
+
+    // 5) Construcción URL
+    const market = 'ES';
+    const seedKey = seeds === await getTopTracks(access_token) ? 'seed_tracks' : 'seed_artists';
+    const url = `https://api.spotify.com/v1/recommendations?limit=${limit}&market=${market}&${seedKey}=${seeds.join(',')}${featureString}`;
+
+    console.log('🔎 Llamando a Spotify:', url);
+    const resp = await fetch(url, { headers: { Authorization: `Bearer ${access_token}` } });
+    const raw = await resp.text();
+
+    if (resp.ok) {
+      const { tracks } = JSON.parse(raw);
+      if (tracks.length) {
+        // Guardamos en BD SIN created_at
+        for (const t of tracks) {
+          await pool.query(
+            `INSERT INTO recomanacions 
+               (user_id, estat_anim, canco_id, nom_canco, artista) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [userId, estat, t.id, t.name, t.artists[0]?.name || 'Desconocido']
+          );
+        }
+        return res.json({ recomanacions: tracks });
+      }
     }
+    console.warn('❌ Recommendations falló o sin tracks:', resp.status, raw);
 
-    // 4. Guardar recomanacions a la base de dades
-    for (const track of data.tracks) {
-      await pool.query(
-        "INSERT INTO recomanacions (user_id, estat_anim, canco_id, nom_canco, artista) VALUES (?, ?, ?, ?, ?)",
-        [userId, estat, track.id, track.name, track.artists[0]?.name || "Sense artista"]
-      );
+    // 6) Fallback a Search por género
+    const moodToGenre = {
+      muy_mal:  'sad',
+      mal:      'emo',
+      algo_mal: 'acoustic',
+      normal:   'pop',
+      bien:     'dance',
+      muy_bien: 'happy',
+      motivado: 'work-out',
+    };
+    const genre = moodToGenre[estat] || 'pop';
+    const searchUrl = `https://api.spotify.com/v1/search?limit=${limit}&market=${market}&type=track&q=genre:${genre}`;
+    console.log('🔎 Fallback Search →', searchUrl);
+    const sResp = await fetch(searchUrl, { headers: { Authorization: `Bearer ${access_token}` } });
+    const sRaw = await sResp.text();
+    if (sResp.ok) {
+      const { tracks } = JSON.parse(sRaw);
+      for (const item of tracks.items.slice(0, limit)) {
+        await pool.query(
+          `INSERT INTO recomanacions 
+             (user_id, estat_anim, canco_id, nom_canco, artista) 
+           VALUES (?, ?, ?, ?, ?)`,
+          [userId, estat, item.id, item.name, item.artists[0]?.name || 'Desconocido']
+        );
+      }
+      return res.json({ recomanacions: tracks.items });
     }
-
-    res.json({ recomanacions: data.tracks });
+    console.error('🚨 Search falló también:', sResp.status, sRaw);
+    throw new Error(`Search Spotify ${sResp.status}`);
   } catch (err) {
-    console.error("❌ Error recomanacions:", err);
-    res.status(500).json({ error: "Error en obtenir recomanacions", detalls: err.message });
+    console.error('🔴 Error en /api/recomanacions:', err);
+    res.status(500).json({
+      error: 'No se pudieron obtener recomendaciones',
+      detalles: err.message
+    });
   }
 });
+
 
 app.listen(4000, '0.0.0.0', () => console.log('✅ Backend escoltant al port 4000'));

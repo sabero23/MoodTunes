@@ -1,59 +1,71 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'mood_selector_magic.dart'; // Este será tu componente animado del mood selector
+import '../utils/session_manager.dart';
+import '../components/mood_selector_magic.dart';
+import '../components/header.dart';
 
-class StandardPage extends StatefulWidget {
-  const StandardPage({super.key});
+class StandardScreen extends StatefulWidget {
+  const StandardScreen({super.key});
 
   @override
-  State<StandardPage> createState() => _StandardPageState();
+  State<StandardScreen> createState() => _StandardScreenState();
 }
 
-class _StandardPageState extends State<StandardPage> {
-  String? nombre;
+class _StandardScreenState extends State<StandardScreen> {
+  String? nom;
+  String? email;
+  String? token;
   bool spotifyLinked = false;
 
   @override
   void initState() {
     super.initState();
-    cargarDadesUsuari();
+    carregarDades();
   }
 
-  void cargarDadesUsuari() async {
-    final token = await _getLocal('token');
-    final email = await _getLocal('email');
-    final nom = await _getLocal('nombre');
+  void carregarDades() async {
+    final nomGuardat = await SessionManager.getNombre();
+    final emailGuardat = await SessionManager.getEmail();
+    final tokenGuardat = await SessionManager.getToken();
 
-    if (token == null || email == null) {
-      if (mounted) Navigator.pushReplacementNamed(context, '/login');
-    } else {
-      setState(() => nombre = nom ?? 'Usuari');
+    String? refreshToken;
 
+    if (tokenGuardat != null && emailGuardat != null) {
       final res = await http.get(
-        Uri.parse('http://localhost:4000/usuarios/info?email=$email'),
-        headers: {"Authorization": "Bearer $token"},
+        Uri.parse('http://localhost:4000/usuarios/info?email=$emailGuardat'),
+        headers: {"Authorization": "Bearer $tokenGuardat"},
       );
 
       final data = jsonDecode(res.body);
-      if (data['spotify_refresh_token'] != null) {
-        setState(() => spotifyLinked = true);
+      refreshToken = data['spotify_refresh_token'];
+    }
+
+    setState(() {
+      nom = nomGuardat;
+      email = emailGuardat;
+      token = tokenGuardat;
+      spotifyLinked = refreshToken != null;
+    });
+  }
+
+  void iniciarSpotify() async {
+    if (email != null) {
+      final uri = Uri.parse('http://localhost:4000/auth/spotify?email=$email');
+      final linked = await Navigator.pushNamed(
+        context,
+        '/connect_spotify',
+        arguments: uri.toString(),
+      );
+      if (linked == true) {
+        carregarDades();
       }
     }
   }
 
-  void iniciarSpotify() async {
-    final email = await _getLocal('email');
-    if (email != null) {
-      final uri = Uri.parse('http://localhost:4000/auth/spotify?email=$email');
-      // Esto abre el navegador externo
-      if (mounted) Navigator.pushNamed(context, '/connect_spotify', arguments: uri.toString());
-    }
-  }
-
-  Future<String?> _getLocal(String key) async {
-    // Sustituir por SharedPreferences o secure_storage si lo implementas
-    return Future.value(null); // Placeholder si aún no tienes guardado nada
+  void logout() async {
+    await SessionManager.clearSession();
+    if (mounted) Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -61,7 +73,11 @@ class _StandardPageState extends State<StandardPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      appBar: Header(
+        rol: 'standard',
+        nombre: nom ?? 'Usuari',
+        onLogout: logout,
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
         child: Column(
@@ -74,8 +90,10 @@ class _StandardPageState extends State<StandardPage> {
             ),
             const SizedBox(height: 6),
             Text(
-              nombre != null ? nombre! : 'Usuari',
-              style: theme.textTheme.headlineSmall?.copyWith(color: theme.colorScheme.primary),
+              nom ?? 'Usuari',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: theme.colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 30),
             if (!spotifyLinked)
