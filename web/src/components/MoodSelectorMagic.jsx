@@ -15,14 +15,19 @@ const moods = [
 ];
 
 export default function MoodSelectorMagic() {
-  const [selectedIndex, setSelectedIndex] = useState(2); // Regular
+  const [selectedIndex, setSelectedIndex] = useState(3); // "Normal"
   const navigate = useNavigate();
   const selectedMood = moods[selectedIndex];
 
   const handleNext = async () => {
-    try {
-      const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("❌ Sessió caducada. Torna a iniciar sessió.");
+      navigate("/login");
+      return;
+    }
 
+    try {
       const resposta = await fetch("http://localhost:4000/api/estat", {
         method: "POST",
         headers: {
@@ -37,11 +42,12 @@ export default function MoodSelectorMagic() {
       if (resposta.ok) {
         localStorage.setItem("estat", selectedMood.id); // 🔁 AFEGIT
         toast.success("Estat d'ànim guardat!");
-        navigate("/recomanacions");
+        navigate("/recomanacions"); // ✅ Redirigir a recomanacions amb dades de Spotify
       } else {
-        toast.error(data.error || "Error al desar l'estat");
+        toast.error(data.error || "❌ Error al desar l'estat");
       }
     } catch (err) {
+      console.error(err);
       toast.error("Error de connexió amb el servidor");
     }
   };
@@ -53,7 +59,6 @@ export default function MoodSelectorMagic() {
         ¿Cómo te has sentido en general hoy?
       </h2>
 
-      {/* Icono animado */}
       <div className="relative w-40 h-40 mx-auto mb-6">
         <AnimatePresence mode="wait">
           <motion.div
@@ -72,9 +77,7 @@ export default function MoodSelectorMagic() {
         />
       </div>
 
-      <div className="text-lg font-bold text-white mb-4">
-        {selectedMood.label}
-      </div>
+      <div className="text-lg font-bold text-white mb-4">{selectedMood.label}</div>
 
       <div className="w-full mb-6">
         <input

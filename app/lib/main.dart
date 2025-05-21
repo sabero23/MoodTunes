@@ -2,11 +2,30 @@ import 'package:flutter/material.dart';
 import 'components/theme_provider.dart';
 import 'pages/login_screen.dart';
 import 'pages/register_screen.dart';
+<<<<<<< HEAD
 import 'pages/standard_screen.dart';
 import 'pages/premium_screen.dart';
 import 'pages/admin_screen.dart';
 import 'pages/RecomanacionsPage_screen.dart';
 import 'pages/ReproductorPage_screen.dart';
+=======
+<<<<<<< HEAD
+import 'pages/admin_screen.dart';
+import 'pages/premium_screen.dart';
+import 'pages/standard_screen.dart';
+import 'pages/playlist_page.dart'; // <- Nombre corregido aquí
+
+void main() => runApp(const MyApp());
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+=======
+import 'pages/standard_page.dart';
+import 'pages/premium_page.dart';
+import 'pages/admin_page.dart';
+import 'pages/recomanacions_page.dart';
+import 'pages/reproductor_page.dart';
+>>>>>>> a54ab9fecfa86938589c954c6e1ac514fde87e95
 import 'pages/redir_handler.dart';
 import 'pages/connect_spotify.dart';
 
@@ -16,24 +35,47 @@ void main() {
 
 class MoodTunesApp extends StatelessWidget {
   const MoodTunesApp({super.key});
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
 
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
 
     return MaterialApp(
+<<<<<<< HEAD
+      title: 'MoodTunes',
+      debugShowCheckedModeBanner: false,
+=======
       debugShowCheckedModeBanner: false,
       title: 'MoodTunes',
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
+<<<<<<< HEAD
       themeMode: brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
+=======
+      themeMode:
+          brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
+>>>>>>> a54ab9fecfa86938589c954c6e1ac514fde87e95
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
+<<<<<<< HEAD
         '/standard': (context) => const StandardScreen(),
         '/premium': (context) => const PremiumScreen(),
         '/admin': (context) => const AdminScreen(),
+=======
+<<<<<<< HEAD
+        '/admin': (context) => const AdminScreen(),
+        '/premium': (context) => const PremiumScreen(),
+        '/standard': (context) => const StandardScreen(),
+        '/playlists': (context) => PlaylistPage(),
+=======
+        '/standard': (context) => const StandardPage(),
+        '/premium': (context) => const PremiumPage(),
+        '/admin': (context) => const AdminPage(),
+>>>>>>> a54ab9fecfa86938589c954c6e1ac514fde87e95
         '/recomanacions': (context) => const RecomanacionsPage(),
       },
       onGenerateRoute: (settings) {
@@ -54,6 +96,7 @@ class MoodTunesApp extends StatelessWidget {
           );
         }
         return null;
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
       },
     );
   }

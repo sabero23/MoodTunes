@@ -73,11 +73,45 @@ class _StandardScreenState extends State<StandardScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+<<<<<<< HEAD
       appBar: Header(
         rol: 'standard',
         nombre: nom ?? 'Usuari',
         onLogout: logout,
       ),
+=======
+<<<<<<< HEAD
+      backgroundColor: const Color(0xFF42658D),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF42658D),
+        elevation: 0,
+        automaticallyImplyLeading: false, // Evita el botón de 'volver'.
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.menu, color: Colors.white),
+         onSelected: (value) {
+  if (value == 'logout') {
+    logout(context);
+  } else if (value == 'playlist') {
+    Navigator.pushNamed(context, '/playlists'); // ✅ Esto era lo que faltaba
+  } else if (value == 'reproductor') {
+    Navigator.pushNamed(context, '/reproductor'); // (si lo tienes implementado)
+  }
+},
+
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'reproductor', child: Text('Reproductor')),
+              const PopupMenuItem(value: 'playlist', child: Text('Playlists')),
+              const PopupMenuItem(value: 'logout', child: Text('Cerrar sesión')),
+            ],
+            color: Colors.white,
+          ),
+        ],
+      ),
+=======
+      backgroundColor: theme.colorScheme.background,
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
+>>>>>>> a54ab9fecfa86938589c954c6e1ac514fde87e95
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
         child: Column(

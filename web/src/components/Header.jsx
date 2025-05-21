@@ -78,11 +78,13 @@ export default function Header() {
           <p className="text-muted-foreground font-medium mb-2">
             {nombre} ({rol})
           </p>
+
           {rol === "admin" && (
             <button onClick={() => goTo("/admin")} className="w-full text-left hover:underline">
               Admin Panel
             </button>
           )}
+
           {rol === "premium" && (
             <>
               <button onClick={() => goTo("/premium")} className="w-full text-left hover:underline">
@@ -91,8 +93,15 @@ export default function Header() {
               <button onClick={() => goTo("/recomanacions")} className="w-full text-left hover:underline">
                 Recomanacions
               </button>
+              <button onClick={() => goTo("/playlists")} className="w-full text-left hover:underline">
+                Les meves Playlists
+              </button>
+              <button onClick={() => goTo("/reproductor")} className="w-full text-left hover:underline">
+                Reproductor
+              </button>
             </>
           )}
+
           {rol === "standard" && (
             <>
               <button onClick={() => goTo("/standard")} className="w-full text-left hover:underline">
@@ -101,12 +110,13 @@ export default function Header() {
               <button onClick={() => goTo("/recomanacions")} className="w-full text-left hover:underline">
                 Recomanacions
               </button>
+              <button onClick={() => goTo("/playlists")} className="w-full text-left hover:underline">
+                Les meves Playlists
+              </button>
+              <button onClick={() => goTo("/reproductor")} className="w-full text-left hover:underline">
+                Reproductor
+              </button>
             </>
-          )}
-          {(rol === "standard" || rol === "premium") && (
-            <button onClick={() => goTo("/reproductor")} className="w-full text-left hover:underline">
-              Reproductor
-            </button>
           )}
         </div>
       )}

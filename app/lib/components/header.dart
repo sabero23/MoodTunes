@@ -37,6 +37,45 @@ class _HeaderState extends State<Header> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+<<<<<<< HEAD
+PopupMenuButton<String>(
+  icon: const Icon(Icons.more_vert, color: Colors.white),
+  onSelected: (value) {
+    switch (value) {
+      case 'logout':
+        _cerrarSesion(context);
+        break;
+      case 'playlists':
+        Navigator.pop(context); // Cierra el popup primero
+        Future.delayed(Duration(milliseconds: 100), () {
+          Navigator.pushNamed(context, '/playlists');
+        });
+        break;
+      case 'reproductor':
+        Navigator.pop(context);
+        Future.delayed(Duration(milliseconds: 100), () {
+          Navigator.pushNamed(context, '/reproductor');
+        });
+        break;
+    }
+  },
+  itemBuilder: (context) => const [
+    PopupMenuItem(
+      value: 'reproductor',
+      child: Text('Reproductor'),
+    ),
+    PopupMenuItem(
+      value: 'playlists',
+      child: Text('Playlists'),
+    ),
+    PopupMenuItem(
+      value: 'logout',
+      child: Text('Tanca sessió'),
+    ),
+  ],
+),
+
+=======
     return Stack(
       children: [
         AppBar(
@@ -124,6 +163,7 @@ class _HeaderState extends State<Header> {
               ),
             ),
           )
+>>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
       ],
     );
   }

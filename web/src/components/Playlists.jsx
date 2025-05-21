@@ -1,14 +1,15 @@
-import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const Playlists = forwardRef((props, ref) => {
+export default function Playlists() {
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const carregarPlaylists = () => {
+  useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    setLoading(true);
     fetch("http://localhost:4000/playlists", {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -20,40 +21,40 @@ const Playlists = forwardRef((props, ref) => {
         setLoading(false);
       })
       .catch((error) => {
-        console.error("❌ Error:", error);
+        console.error("Error carregant playlists:", error);
         setLoading(false);
       });
-  };
-
-  useEffect(() => {
-    carregarPlaylists();
   }, []);
 
-  // expose la funció perquè pugui ser cridada des de fora
-  useImperativeHandle(ref, () => ({
-    refrescar: carregarPlaylists,
-  }));
+  if (loading) return <p className="text-center">Carregant playlists...</p>;
 
-  if (loading) return <p>Carregant playlists...</p>;
-  if (playlists.length === 0) return <p>No tens cap playlist.</p>;
+  if (playlists.length === 0)
+    return <p className="text-center text-muted-foreground">No tens cap playlist.</p>;
 
   return (
-    <div>
-      <h2>Les meves Playlists</h2>
-      <ul>
-  {playlists.map((p) => (
-    <li key={p.id} style={{ marginBottom: "1rem" }}>
-      <strong>{p.nom}</strong> — {p.descripcio || "Sense descripció"}
-      <div>
-        <em>(Contingut: {p.canco_count || 0} cançons)</em>
-      </div>
-      <button onClick={() => eliminarPlaylist(p.id)}>🗑️ Eliminar</button>
-    </li>
-  ))}
-</ul>
-
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+      {playlists.map((p) => (
+        <div
+          key={p.id}
+          className="bg-white dark:bg-neutral-900 shadow-md rounded-lg p-4 transition hover:shadow-xl"
+        >
+          <h3 className="text-lg font-bold text-primary mb-1">{p.nom}</h3>
+          <p className="text-sm text-muted-foreground mb-2">
+            {p.descripcio || "Sense descripció"}
+          </p>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            🎶 0 cançons {/* Aquí pots mostrar count real si ho tens */}
+          </div>
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => navigate(`/playlist/${p.id}`)}
+              className="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Veure
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
-});
-
-export default Playlists;
+}

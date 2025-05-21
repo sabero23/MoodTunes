@@ -1,18 +1,19 @@
-// src/App.jsx
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import AdminPage from "./pages/AdminPage";
-import PremiumPage from "./pages/PremiumPage";
-import StandardPage from "./pages/StandardPage";
-import RecomanacionsPage from "./pages/RecomanacionsPage";
-import ReproductorPage from "./pages/ReproductorPage";
-import AccessDenied from "./pages/AccessDenied";
-import ConnectSpotify from "./pages/ConnectSpotify";
-import Redir from "./pages/Redir";
-import Layout from "./components/Layout";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import AdminPage from './pages/AdminPage';
+import PremiumPage from './pages/PremiumPage';
+import StandardPage from './pages/StandardPage';
+import RecomanacionsPage from './pages/RecomanacionsPage';
+import ReproductorPage from './pages/ReproductorPage';
+import AccessDenied from './pages/AccessDenied';
+import ConnectSpotify from './pages/ConnectSpotify';
+import Redir from './pages/Redir';
+import PlaylistPage from './pages/PlaylistPage'; // ✅ Afegit
+import PlaylistDetailPage from './pages/PlaylistDetailPage';
+import Layout from './components/Layout';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function ProtectedRoute({ element, allowedRoles }) {
   const usuari = JSON.parse(localStorage.getItem("usuari"));
@@ -72,6 +73,16 @@ function App() {
             </Layout>
           }
         />
+
+        <Route
+          path="/playlists"
+          element={<ProtectedRoute allowedRoles={['standard', 'premium']} element={<PlaylistPage />} />}
+        />
+        {/* 👆 permet accés a standard i premium */}
+        <Route
+  path="/playlist/:id"
+  element={<ProtectedRoute allowedRoles={['standard', 'premium']} element={<PlaylistDetailPage />} />}
+/>
       </Routes>
 
       <ToastContainer
