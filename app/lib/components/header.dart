@@ -33,143 +33,69 @@ class _HeaderState extends State<Header> {
     Navigator.pushNamed(context, route);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+@override
+Widget build(BuildContext context) {
+  final theme = Theme.of(context);
 
-<<<<<<< HEAD
-PopupMenuButton<String>(
-  icon: const Icon(Icons.more_vert, color: Colors.white),
-  onSelected: (value) {
-    switch (value) {
-      case 'logout':
-        _cerrarSesion(context);
-        break;
-      case 'playlists':
-        Navigator.pop(context); // Cierra el popup primero
-        Future.delayed(Duration(milliseconds: 100), () {
-          Navigator.pushNamed(context, '/playlists');
-        });
-        break;
-      case 'reproductor':
-        Navigator.pop(context);
-        Future.delayed(Duration(milliseconds: 100), () {
-          Navigator.pushNamed(context, '/reproductor');
-        });
-        break;
-    }
-  },
-  itemBuilder: (context) => const [
-    PopupMenuItem(
-      value: 'reproductor',
-      child: Text('Reproductor'),
-    ),
-    PopupMenuItem(
-      value: 'playlists',
-      child: Text('Playlists'),
-    ),
-    PopupMenuItem(
-      value: 'logout',
-      child: Text('Tanca sessió'),
-    ),
-  ],
-),
-
-=======
-    return Stack(
-      children: [
-        AppBar(
-          backgroundColor: Colors.black,
-          title: Row(
-            children: [
-              Image.asset('assets/logo.png', height: 30),
-              const SizedBox(width: 8),
-              const Text(
-                'MoodTunes',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(
-                theme.brightness == Brightness.dark
-                    ? Icons.wb_sunny_outlined
-                    : Icons.nightlight_outlined,
-              ),
-              onPressed: () => toggleTheme(context),
-            ),
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => setState(() => showMenu = !showMenu),
-            ),
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: widget.onLogout,
-            )
-          ],
+  return AppBar(
+    backgroundColor: theme.primaryColor,
+    title: Text('${widget.rol}: ${widget.nombre}'),
+    actions: [
+      IconButton(
+        icon: Icon(
+          Theme.of(context).brightness == Brightness.dark
+              ? Icons.light_mode
+              : Icons.dark_mode,
+          color: Colors.white,
         ),
-        if (showMenu)
-          Positioned(
-            top: 56,
-            right: 12,
-            child: Material(
-              elevation: 6,
-              borderRadius: BorderRadius.circular(12),
-              color: theme.cardColor,
-              child: Container(
-                width: 200,
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${widget.nombre} (${widget.rol})',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const Divider(),
-                    if (widget.rol == 'admin')
-                      TextButton(
-                        onPressed: () => goTo('/admin'),
-                        child: const Text('Admin Panel'),
-                      ),
-                    if (widget.rol == 'premium') ...[
-                      TextButton(
-                        onPressed: () => goTo('/premium'),
-                        child: const Text('Premium Page'),
-                      ),
-                      TextButton(
-                        onPressed: () => goTo('/recomanacions'),
-                        child: const Text('Recomanacions'),
-                      ),
-                    ],
-                    if (widget.rol == 'standard') ...[
-                      TextButton(
-                        onPressed: () => goTo('/standard'),
-                        child: const Text('Standard Page'),
-                      ),
-                      TextButton(
-                        onPressed: () => goTo('/recomanacions'),
-                        child: const Text('Recomanacions'),
-                      ),
-                    ],
-                    if (['standard', 'premium'].contains(widget.rol))
-                      TextButton(
-                        onPressed: () => goTo('/reproductor'),
-                        child: const Text('Reproductor'),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          )
->>>>>>> 44f321b9e27379ef06ba58518dbdf45849dba3ac
-      ],
-    );
-  }
+        onPressed: () => toggleTheme(context),
+      ),
+      PopupMenuButton<String>(
+        icon: const Icon(Icons.more_vert, color: Colors.white),
+        onSelected: (value) {
+          switch (value) {
+            case 'logout':
+              _cerrarSesion(context);
+              break;
+            case 'playlists':
+              Navigator.pop(context); // Cierra el popup primero
+              Future.delayed(const Duration(milliseconds: 100), () {
+                Navigator.pushNamed(context, '/playlists');
+              });
+              break;
+            case 'reproductor':
+              Navigator.pop(context);
+              Future.delayed(const Duration(milliseconds: 100), () {
+                Navigator.pushNamed(context, '/reproductor');
+              });
+              break;
+          }
+        },
+        itemBuilder: (context) => const [
+          PopupMenuItem(
+            value: 'reproductor',
+            child: Text('Reproductor'),
+          ),
+          PopupMenuItem(
+            value: 'playlists',
+            child: Text('Playlists'),
+          ),
+          PopupMenuItem(
+            value: 'logout',
+            child: Text('Tanca sessió'),
+          ),
+        ],
+      ),
+    ],
+  );
 }
 
-/// Clase auxiliar para cambiar tema dinámicamente
+void _cerrarSesion(BuildContext context) {
+  widget.onLogout();
+}
+}
+
+// Clase auxiliar para cambiar tema dinámicamente
 class DynamicTheme extends InheritedWidget {
   final void Function(Brightness) setBrightness;
 

@@ -1,76 +1,163 @@
 // src/pages/ReproductorPage.jsx
-import { Button } from "../components/ui/button"
+import { useEffect, useState, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { FiArrowLeft } from "react-icons/fi";
+import { Button } from "../components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle
-} from "../components/ui/card"
-import { BorderBeam } from "../components/magicui/border-beam"
-
-import { Play, SkipBack, SkipForward } from "lucide-react"
-import { useLocation, useNavigate } from "react-router-dom"
-import { useEffect, useState } from "react"
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "../components/ui/card";
 
 export default function ReproductorPage() {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [canco, setCanco] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [canco, setCanco] = useState(null);
+  const [playerReady, setPlayerReady] = useState(false);
+  const playerRef = useRef(null);
 
-    useEffect(() => {
-        if (location.state?.canco) {
-            setCanco(location.state.canco);
-        } else {
-            navigate("/");
-        }
-    }, [location, navigate]);
+  // Obtener el usuario y su rol
+  const usuari = JSON.parse(localStorage.getItem("usuari") || "{}");
+  const isPremium = usuari?.rol === "premium";
 
-    if (!canco) return null;
+  useEffect(() => {
+    if (!location.state?.canco) {
+      navigate(-1);
+      return;
+    }
+    setCanco(location.state.canco);
+  }, [location, navigate]);
 
-    return (
-        <div className="min-h-screen flex items-center justify-center px-4 bg-background text-foreground">
-            <div className="absolute top-4 left-4">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-sm font-medium hover:underline"
-                >
-                    <FiArrowLeft /> Tornar
-                </button>
-            </div>
+  // Si es premium, cargamos el SDK y creamos el player
+  useEffect(() => {
+    if (!isPremium || !canco) return;
 
-            <Card className="relative w-[350px] overflow-hidden">
-                <CardHeader>
-                    <CardTitle>Now Playing</CardTitle>
-                    <CardDescription>{canco.nom_canco} - {canco.artista}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="h-48 w-48 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500" />
-                        <div className="h-1 w-full rounded-full bg-secondary">
-                            <div className="h-full w-1/3 rounded-full bg-primary" />
-                        </div>
-                        <div className="flex w-full justify-between text-sm text-muted-foreground">
-                            <span>0:00</span>
-                            <span>3:30</span>
-                        </div>
-                    </div>
-                </CardContent>
-                <CardFooter className="flex justify-center gap-4">
-                    <Button variant="outline" size="icon" className="rounded-full">
-                        <SkipBack className="size-4" />
-                    </Button>
-                    <Button size="icon" className="rounded-full">
-                        <Play className="size-4" />
-                    </Button>
-                    <Button variant="outline" size="icon" className="rounded-full">
-                        <SkipForward className="size-4" />
-                    </Button>
-                </CardFooter>
-                <BorderBeam duration={6} size={400} className="from-transparent via-red-500 to-transparent" />
-                <BorderBeam duration={6} delay={3} size={400} className="from-transparent via-blue-500 to-transparent" />
-            </Card>
-        </div>
-    );
+    // 1) Inyectar el script del SDK
+    const tag = document.createElement("script");
+    tag.src = "https://sdk.scdn.co/spotify-player.js";
+    document.body.appendChild(tag);
+
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      const token = localStorage.getItem("token"); // tu JWT, que el backend intercambiará por un token Spotify
+      const player = new window.Spotify.Player({
+        name: "MoodTunes Player",
+        getOAuthToken: cb => { cb(token); },
+        volume: 0.8
+      });
+      playerRef.current = player;
+
+      // Escuchar estado “ready”
+      player.addListener("ready", ({ device_id }) => {
+        console.log("▶️ Spotify Player listo en device:", device_id);
+        setPlayerReady(device_id);
+        // Opcional: transferir playback al dispositivo
+        fetch("https://api.spotify.com/v1/me/player", {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ device_ids: [device_id] })
+        });
+      });
+
+      player.connect();
+    };
+
+    // Cleanup
+    return () => {
+      if (playerRef.current) playerRef.current.disconnect();
+    };
+  }, [isPremium, canco]);
+
+  if (!canco) return null;
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 bg-background">
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 text-sm text-gray-300 hover:underline"
+      >
+        <FiArrowLeft /> Tornar
+      </button>
+
+      <Card className="w-full max-w-md overflow-hidden">
+        <CardHeader>
+          <CardTitle>Now Playing</CardTitle>
+          <CardDescription>
+            {canco.name} — {canco.artist}
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <img
+            src={canco.image}
+            alt={canco.name}
+            className="w-full h-48 object-cover rounded-lg"
+          />
+
+          {isPremium ? (
+            <>
+              {!playerReady ? (
+                <p className="mt-4 text-center text-sm text-gray-500">
+                  Conectando al reproductor…
+                </p>
+              ) : (
+                <div className="mt-4 flex justify-center gap-4">
+                  <Button
+                    onClick={() =>
+                      playerRef.current.togglePlay().catch(e => console.error(e))
+                    }
+                  >
+                    Play/Pause
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      playerRef.current.previousTrack().catch(e => console.error(e))
+                    }
+                  >
+                    ◀◀
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      playerRef.current.nextTrack().catch(e => console.error(e))
+                    }
+                  >
+                    ▶▶
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {canco.preview ? (
+                <audio
+                  src={canco.preview}
+                  controls
+                  className="w-full mt-4"
+                />
+              ) : (
+                <div className="mt-4 p-4 text-center text-sm text-gray-500">
+                  No hi ha previsualització.
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+
+        <CardFooter className="flex justify-center">
+          {!isPremium && (
+            <Button
+              onClick={() => window.open(canco.uri, "_blank")}
+            >
+              Obre a Spotify
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+    </div>
+  );
 }
