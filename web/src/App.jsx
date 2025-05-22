@@ -57,6 +57,7 @@ function App() {
             </Layout>
           }
         />
+
         <Route
           path="/recomanacions"
           element={
@@ -80,9 +81,9 @@ function App() {
         />
         {/* 👆 permet accés a standard i premium */}
         <Route
-  path="/playlist/:id"
-  element={<ProtectedRoute allowedRoles={['standard', 'premium']} element={<PlaylistDetailPage />} />}
-/>
+          path="/playlist/:id"
+          element={<ProtectedRoute allowedRoles={['standard', 'premium']} element={<PlaylistDetailPage />} />}
+        />
       </Routes>
 
       <ToastContainer

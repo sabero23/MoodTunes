@@ -1,123 +1,156 @@
 // src/components/Header.jsx
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiLogOut, FiMenu } from "react-icons/fi";
-import { Sun, Moon } from "lucide-react";
+import {
+  Sun,
+  Moon,
+  Menu as MenuIcon,
+  LogOut,
+  Shield,
+  User,
+  Music,
+  List,
+  PlayCircle,
+} from "lucide-react";
 
 export default function Header() {
-  const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const nav = useNavigate();
+  const [isDark, setIsDark] = useState(false);
+  const [open, setOpen] = useState(false);
   const [rol, setRol] = useState("");
-  const [nombre, setNombre] = useState("");
-  const menuRef = useRef(null);
+  const [nom, setNom] = useState("");
+  const menuRef = useRef();
 
   useEffect(() => {
-    const root = window.document.documentElement;
-    setIsDarkMode(root.classList.contains("dark"));
+    setIsDark(document.documentElement.classList.contains("dark"));
     setRol(localStorage.getItem("rol") || "");
-    setNombre(localStorage.getItem("nombre") || "");
+    setNom(localStorage.getItem("nom") || "");
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowMenu(false);
+    const onClickOutside = (e) => {
+      if (open && menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpen(false);
       }
     };
-    if (showMenu) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showMenu]);
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
 
   const toggleTheme = () => {
-    const root = window.document.documentElement;
-    root.classList.toggle("dark");
-    setIsDarkMode(!isDarkMode);
+    document.documentElement.classList.toggle("dark");
+    setIsDark((v) => !v);
   };
 
   const logout = () => {
     localStorage.clear();
-    navigate("/login");
+    nav("/login");
   };
 
   const goTo = (path) => {
-    setShowMenu(false);
-    navigate(path);
+    setOpen(false);
+    nav(path);
   };
 
+  const logo = isDark
+    ? "/logo_moodtunes_white.svg"
+    : "/logo_moodtunes_blue.svg";
+
+  // helpers
+  const txt = isDark ? "text-white" : "text-black";
+  const hoverBg = isDark
+    ? "hover:bg-gray-800/30"
+    : "hover:bg-gray-200/50";
+
   return (
-    <header className="flex justify-between items-center px-4 py-3 bg-black text-white shadow relative z-50">
-      <div className="flex items-center space-x-2">
-        <img src="/logo.png" alt="MoodTunes Logo" className="h-8" />
-        <span className="font-bold text-xl">MoodTunes</span>
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 flex items-center 
+                  justify-between px-6 py-3 shadow-md
+                  ${isDark ? "bg-black" : "bg-white"}`}
+    >
+      <div className="flex items-center gap-3">
+        <img src={logo} alt="MoodTunes" className="h-8 w-auto" />
+        <span className={`font-semibold text-xl ${txt}`}>MoodTunes</span>
       </div>
 
       <div className="flex items-center gap-4">
-        <button onClick={toggleTheme} className="text-xl">
-          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
-
-        <button onClick={() => setShowMenu(!showMenu)} className="text-xl">
-          <FiMenu size={22} />
+        <button
+          onClick={toggleTheme}
+          className={`p-1 bg-transparent ${txt} ${hoverBg} rounded transition`}
+          aria-label="Canvia tema"
+        >
+          {isDark ? <Sun size={20} /> : <Moon size={20} />}
         </button>
 
         <button
-          onClick={logout}
-          className="ml-2 text-sm px-3 py-1 rounded bg-red-500 hover:bg-red-600 transition"
+          onClick={() => setOpen((v) => !v)}
+          className={`p-1 bg-transparent ${txt} ${hoverBg} rounded transition`}
+          aria-label="Obre menú"
         >
-          <FiLogOut className="inline mr-1" />
-          Sortir
+          <MenuIcon size={24} />
         </button>
       </div>
 
-      {showMenu && (
+      {open && (
         <div
           ref={menuRef}
-          className="absolute right-4 top-16 bg-white dark:bg-neutral-800 shadow-lg rounded-lg p-4 text-sm w-48 space-y-2 z-50"
+          className={`absolute right-6 top-full mt-2 w-56 rounded-lg 
+                      shadow-lg ring-1 ring-black/20
+                      ${isDark ? "bg-black text-white" : "bg-white text-black"}`}
         >
-          <p className="text-muted-foreground font-medium mb-2">
-            {nombre} ({rol})
-          </p>
-
-          {rol === "admin" && (
-            <button onClick={() => goTo("/admin")} className="w-full text-left hover:underline">
-              Admin Panel
+          <div
+            className={`px-4 py-3 border-b ${
+              isDark ? "border-gray-700/50" : "border-gray-300"
+            }`}
+          >
+            <p className="font-medium">{nom}</p>
+            <p className="text-xs text-gray-400 uppercase">{rol}</p>
+          </div>
+          <nav className="flex flex-col">
+            {rol === "admin" && (
+              <button
+                onClick={() => goTo("/admin")}
+                className={`flex items-center gap-2 px-4 py-3 bg-transparent ${hoverBg} ${txt} transition`}
+              >
+                <Shield size={16} /> Panell d’Admin
+              </button>
+            )}
+            {(rol === "premium" || rol === "standard") && (
+              <>
+                <button
+                  onClick={() => goTo(`/${rol}`)}
+                  className={`flex items-center gap-2 px-4 py-3 bg-transparent ${hoverBg} ${txt} transition`}
+                >
+                  <User size={16} /> La meva pàgina
+                </button>
+                <button
+                  onClick={() => goTo("/recomanacions")}
+                  className={`flex items-center gap-2 px-4 py-3 bg-transparent ${hoverBg} ${txt} transition`}
+                >
+                  <Music size={16} /> Recomanacions
+                </button>
+                <button
+                  onClick={() => goTo("/playlists")}
+                  className={`flex items-center gap-2 px-4 py-3 bg-transparent ${hoverBg} ${txt} transition`}
+                >
+                  <List size={16} /> Les meves playlists
+                </button>
+                <button
+                  onClick={() => goTo("/reproductor")}
+                  className={`flex items-center gap-2 px-4 py-3 bg-transparent ${hoverBg} ${txt} transition`}
+                >
+                  <PlayCircle size={16} /> Reproductor
+                </button>
+              </>
+            )}
+            <button
+              onClick={logout}
+              className="mt-1 flex items-center gap-2 px-4 py-3 
+                         bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-b-lg transition"
+            >
+              <LogOut size={16} /> Tancar sessió
             </button>
-          )}
-
-          {rol === "premium" && (
-            <>
-              <button onClick={() => goTo("/premium")} className="w-full text-left hover:underline">
-                Premium Page
-              </button>
-              <button onClick={() => goTo("/recomanacions")} className="w-full text-left hover:underline">
-                Recomanacions
-              </button>
-              <button onClick={() => goTo("/playlists")} className="w-full text-left hover:underline">
-                Les meves Playlists
-              </button>
-              <button onClick={() => goTo("/reproductor")} className="w-full text-left hover:underline">
-                Reproductor
-              </button>
-            </>
-          )}
-
-          {rol === "standard" && (
-            <>
-              <button onClick={() => goTo("/standard")} className="w-full text-left hover:underline">
-                Standard Page
-              </button>
-              <button onClick={() => goTo("/recomanacions")} className="w-full text-left hover:underline">
-                Recomanacions
-              </button>
-              <button onClick={() => goTo("/playlists")} className="w-full text-left hover:underline">
-                Les meves Playlists
-              </button>
-              <button onClick={() => goTo("/reproductor")} className="w-full text-left hover:underline">
-                Reproductor
-              </button>
-            </>
-          )}
+          </nav>
         </div>
       )}
     </header>

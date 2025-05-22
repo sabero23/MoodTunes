@@ -189,99 +189,124 @@ const moodBuckets = {
   motivado: f => f.energy >= 0.7 && f.tempo >= 100
 };
 
+// ────────────── RECOMENDACIONS PERSONALITZADES ──────────────
 app.get('/api/recomanacions', authRequired, async (req, res) => {
   const userId = req.user.id;
   try {
-    // 1) Último mood y límite según rol
+    // 1) Últim estat d'ànim
     const [[{ estat }]] = await pool.query(
       'SELECT estat FROM estats_anim WHERE user_id = ? ORDER BY `data` DESC LIMIT 1',
       [userId]
     );
-    const limit = req.user.rol === 'premium' ? 3 : 1;
+    const limit = req.user.rol === 'premium' ? 10 : 3;
 
-    // 2) Ya recomendadas hoy
-    const today = new Date().toISOString().slice(0,10);
-    const [oldRows] = await pool.query(
-      `SELECT canco_id FROM recomanacions
-         WHERE user_id=? AND estat_anim=? AND DATE(data)=?`,
-      [userId, estat, today]
-    );
-    const seen = oldRows.map(r => r.canco_id);
+    // 2) Token Spotify
+    const access_token = await getSpotifyTokenPerUsuari(userId);
 
-    // 3) Semillas y token
-    const token = await getSpotifyTokenPerUsuari(userId);
+    // 3) Seeds: top tracks o top artists
     let seeds = [];
     try {
-      seeds = (await getTopTracks(token)).slice(0,5);
+      seeds = (await getTopTracks(access_token)).slice(0, 5);
     } catch {
-      seeds = (await getTopArtists(token)).slice(0,5);
+      seeds = (await getTopArtists(access_token)).slice(0, 5);
     }
-    if (!seeds.length) throw new Error('Sin semillas');
+    if (!seeds.length) throw new Error('Sense seeds de l’usuari');
 
-    // 4) Intento Recommendations
-    let tracks = [];
-    try {
-      const url = `https://api.spotify.com/v1/recommendations`
-                + `?limit=${limit*2}&market=ES`
-                + `&seed_tracks=${seeds.join(',')}`;
-      const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-      if (r.ok) {
-        const js = await r.json();
-        tracks = js.tracks || [];
+    // 4) Map de filtres segons l’estat
+    const moodToAudio = {
+      muy_mal:  { max_valence: 0.2, max_energy: 0.2 },
+      mal:      { max_valence: 0.3, max_energy: 0.4 },
+      algo_mal: { max_valence: 0.4, max_energy: 0.5 },
+      normal:   { min_valence: 0.4, max_valence: 0.6 },
+      bien:     { min_valence: 0.6, min_energy: 0.5 },
+      muy_bien: { min_valence: 0.8, min_energy: 0.6 },
+      motivado: { min_energy: 0.7, min_tempo: 100 },
+    };
+    const audioParams = moodToAudio[estat] || {};
+    const featureString = Object.entries(audioParams)
+      .map(([k,v]) => `&${k}=${v}`)
+      .join('');
+
+    // 5) Construcció de l’URL a l’API de Spotify
+    const market = 'ES';
+    const seedKey = seeds === await getTopTracks(access_token)
+      ? 'seed_tracks'
+      : 'seed_artists';
+    const spotifyUrl =
+      `https://api.spotify.com/v1/recommendations?limit=${limit}` +
+      `&market=${market}` +
+      `&${seedKey}=${seeds.join(',')}` +
+      featureString;
+
+    console.log('🔎 Cridant Spotify:', spotifyUrl);
+    const resp = await fetch(spotifyUrl, {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    const text = await resp.text();
+
+    if (resp.ok) {
+      const { tracks } = JSON.parse(text);
+      if (tracks.length) {
+        // 6) Guardar recomanacions a la BD
+        for (const t of tracks) {
+          await pool.query(
+            `INSERT INTO recomanacions
+               (user_id, estat_anim, canco_id, nom_canco, artista)
+             VALUES (?, ?, ?, ?, ?)`,
+            [userId, estat, t.id, t.name, t.artists[0]?.name || 'Desconegut']
+          );
+        }
+        return res.json({ recomanacions: tracks });
       }
-    } catch (err) {
-      console.warn('▸ reco error', err.message);
     }
+    console.warn('❌ Recomendacions sense tracks o error:', resp.status, text);
 
-    // 5) Filtrar duplicados y recortar a `limit`
-    let uniques = tracks.filter(t => !seen.includes(t.id)).slice(0, limit);
-    if (uniques.length < limit) {
-      uniques = tracks.slice(0, limit);
-    }
+    // 7) Fallback: cerca per gènere
+    const moodToGenre = {
+      muy_mal:  'sad',
+      mal:      'emo',
+      algo_mal: 'acoustic',
+      normal:   'pop',
+      bien:     'dance',
+      muy_bien: 'happy',
+      motivado: 'work-out',
+    };
+    const genre = moodToGenre[estat] || 'pop';
+    const searchUrl =
+      `https://api.spotify.com/v1/search?limit=${limit}` +
+      `&market=${market}` +
+      `&type=track&q=genre:${genre}`;
+    console.log('🔎 Fallback Search:', searchUrl);
+    const sResp = await fetch(searchUrl, {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    const sText = await sResp.text();
 
-    // 6) Fallback search si no hay `uniques`
-    if (!uniques.length) {
-      const moodToGenre = {
-        muy_mal: 'sad', mal: 'emo', algo_mal: 'acoustic',
-        normal: 'pop', bien: 'dance', muy_bien: 'happy',
-        motivado: 'work-out'
-      };
-      const genre = moodToGenre[estat] || 'pop';
-      const searchUrl = `https://api.spotify.com/v1/search`
-                      + `?limit=${limit}&market=ES&type=track&q=genre:${genre}`;
-      const sr = await fetch(searchUrl, { headers: { Authorization: `Bearer ${token}` } });
-      if (!sr.ok) throw new Error(`Search Spotify ${sr.status}`);
-      const sj = await sr.json();
-      uniques = (sj.tracks.items||[]).slice(0, limit);
+    if (sResp.ok) {
+      const { tracks } = JSON.parse(sText);
+      for (const item of tracks.items.slice(0, limit)) {
+        await pool.query(
+          `INSERT INTO recomanacions
+             (user_id, estat_anim, canco_id, nom_canco, artista)
+           VALUES (?, ?, ?, ?, ?)`,
+          [userId, estat, item.id, item.name, item.artists[0]?.name || 'Desconegut']
+        );
+      }
+      return res.json({ recomanacions: tracks.items });
     }
-
-    // 7) Guardar en BD y formatear salida **incluyendo preview_url**
-    const salida = [];
-    for (const t of uniques) {
-      await pool.query(
-        `INSERT INTO recomanacions
-           (user_id, estat_anim, canco_id, nom_canco, artista)
-         VALUES (?,?,?,?,?)`,
-        [userId, estat, t.id, t.name, t.artists[0]?.name || 'Desconocido']
-      );
-      salida.push({
-        id:      t.id,
-        name:    t.name,
-        artist:  t.artists[0]?.name || 'Desconocido',
-        image:   t.album.images[0]?.url  || '',
-        uri:     t.uri,               // para deep-link a Spotify si quieres
-        preview: t.preview_url        // aquí está la preview de 30s
-      });
-    }
-    res.json({ recomanacions: salida });
+    console.error('🚨 Fallback Search fallit:', sResp.status, sText);
+    throw new Error(`Fallback Spotify ${sResp.status}`);
   } catch (err) {
-    console.error('💥 /api/recomanacions fallo:', err);
+    console.error('🔴 Error a /api/recomanacions:', err);
     res.status(500).json({
-      error: 'No se pudieron obtener recomendaciones',
-      detalles: err.message
+      error: 'No s’han pogut obtenir recomanacions',
+      details: err.message
     });
   }
 });
+
+
+
 // ────────────────────────────────────────────────────────────────────────────────
 
 app.listen(4000, '0.0.0.0', () =>

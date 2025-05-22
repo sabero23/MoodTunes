@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -30,6 +31,7 @@ export default function Login() {
         localStorage.setItem("email", email);
         localStorage.setItem("nombre", data.nom);
         localStorage.setItem("rol", data.rol);
+        localStorage.setItem("nom", data.nom);      // coincide con ThemeToggle
         localStorage.setItem("usuari", JSON.stringify(data));
 
         setTimeout(() => navigate(`/${data.rol}`), 1500);
@@ -43,6 +45,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 to-blue-300 dark:from-[#0b132b] dark:to-[#1c2541] flex items-center justify-center px-4 relative">
+      {/* Toggle de tema */}
       <div className="absolute top-4 right-4 z-10">
         <ThemeToggle />
       </div>
@@ -55,7 +58,8 @@ export default function Login() {
         className="w-full max-w-md bg-white dark:bg-neutral-900 p-8 rounded-2xl shadow-xl space-y-6"
       >
         <div className="text-center">
-          <img src="/logo.png" alt="MoodTunes" className="w-16 mx-auto mb-2" />
+          <img src="/logo_moodtunes_blue.svg" alt="MoodTunes" className="w-16 mx-auto mb-2 dark:hidden" />
+          <img src="/logo_moodtunes_white.svg" alt="MoodTunes" className="w-16 mx-auto mb-2 hidden dark:block" />
           <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">
             Benvingut a MoodTunes
           </h2>

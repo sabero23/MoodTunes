@@ -1,20 +1,43 @@
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+// src/components/ThemeToggle.jsx
+import { useState, useEffect } from "react";
+import { Sun, Moon } from "lucide-react";
 
 export default function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const [isDark, setIsDark] = useState(false);
+
+  // Al montar, aplicar theme guardado
+  useEffect(() => {
+    const theme = localStorage.getItem("theme");
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+      setIsDark(true);
+    } else {
+      document.documentElement.classList.remove("dark");
+      setIsDark(false);
+    }
+  }, []);
 
   const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    const newDark = !isDark;
+    document.documentElement.classList.toggle("dark", newDark);
+    setIsDark(newDark);
+    localStorage.setItem("theme", newDark ? "dark" : "light");
   };
 
   return (
     <button
       onClick={toggleTheme}
-      className="absolute top-4 right-4 p-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 shadow hover:scale-105 transition-all"
-      title="Canviar tema"
+      aria-label="Canvia tema"
+      className={`
+        p-2 rounded 
+        transition-opacity duration-200
+        ${isDark
+          ? "bg-black text-white border border-white"
+          : "bg-white text-black border border-black"}
+        hover:opacity-75
+      `}
     >
-      {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+      {isDark ? <Sun size={20} /> : <Moon size={20} />}
     </button>
   );
 }

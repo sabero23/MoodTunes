@@ -1,3 +1,4 @@
+// src/components/MoodSelectorMagic.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -5,17 +6,17 @@ import { Button } from "../components/ui/button";
 import { toast } from "react-toastify";
 
 const moods = [
-  { id: "muy_mal", label: "Muy mal", color: "from-red-500 to-red-700" },
-  { id: "mal", label: "Mal", color: "from-orange-500 to-orange-700" },
-  { id: "algo_mal", label: "Algo mal", color: "from-amber-400 to-amber-600" },
-  { id: "normal", label: "Normal", color: "from-gray-400 to-gray-600" },
-  { id: "bien", label: "Bien", color: "from-green-400 to-green-600" },
-  { id: "muy_bien", label: "Muy bien", color: "from-emerald-400 to-emerald-600" },
-  { id: "motivado", label: "Motivado", color: "from-blue-500 to-indigo-700" },
+  { id: "muy_mal",   label: "Muy mal",     color: "from-red-500 to-red-700" },
+  { id: "mal",       label: "Mal",         color: "from-orange-500 to-orange-700" },
+  { id: "algo_mal",  label: "Algo mal",    color: "from-amber-400 to-amber-600" },
+  { id: "normal",    label: "Normal",      color: "from-gray-400 to-gray-600" },
+  { id: "bien",      label: "Bien",        color: "from-green-400 to-green-600" },
+  { id: "muy_bien",  label: "Muy bien",    color: "from-emerald-400 to-emerald-600" },
+  { id: "motivado",  label: "Motivado",    color: "from-blue-500 to-indigo-700" },
 ];
 
 export default function MoodSelectorMagic() {
-  const [selectedIndex, setSelectedIndex] = useState(3); // "Normal"
+  const [selectedIndex, setSelectedIndex] = useState(3); // per defecte "Normal"
   const navigate = useNavigate();
   const selectedMood = moods[selectedIndex];
 
@@ -28,7 +29,8 @@ export default function MoodSelectorMagic() {
     }
 
     try {
-      const resposta = await fetch("http://localhost:4000/api/estat", {
+      // 1) Guardem l'estat al backend
+      const resp = await fetch("http://localhost:4000/api/estat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,22 +38,21 @@ export default function MoodSelectorMagic() {
         },
         body: JSON.stringify({ estat: selectedMood.id }),
       });
+      const data = await resp.json();
 
-      const data = await resposta.json();
-
-      if (resposta.ok) {
-        localStorage.setItem("estat", selectedMood.id); // 🔁 AFEGIT
-        toast.success("Estat d'ànim guardat!");
-        navigate("/recomanacions"); // ✅ Redirigir a recomanacions amb dades de Spotify
-      } else {
+      if (!resp.ok) {
         toast.error(data.error || "❌ Error al desar l'estat");
+        return;
       }
+
+      // 2) Si tot ok, redirigim a recomanacions
+      toast.success("✅ Estat d'ànim guardat!");
+      navigate("/recomanacions");
     } catch (err) {
       console.error(err);
       toast.error("Error de connexió amb el servidor");
     }
   };
-
 
   return (
     <div className="w-full max-w-md mx-auto text-center p-6">

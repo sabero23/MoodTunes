@@ -5,13 +5,17 @@
 @layer base {
   :root {
     /* MODE CLAR — paleta elegant */
-    --background: 240 13% 85%;          /* #D7D9D7 Platinum */
+    --background: 240 13% 85%;
+    /* #D7D9D7 Platinum */
     --foreground: 0 0% 10%;
-    --primary: 310 20% 75%;             /* #BAACBD Rose Quartz */
+    --primary: 310 20% 75%;
+    /* #BAACBD Rose Quartz */
     --primary-foreground: 0 0% 100%;
-    --card: 290 24% 74%;                /* #B48EAE Lilac */
+    --card: 290 24% 74%;
+    /* #B48EAE Lilac */
     --card-foreground: 0 0% 10%;
-    --muted: 0 0% 90%;                  /* #C9C5CB French Gray */
+    --muted: 0 0% 90%;
+    /* #C9C5CB French Gray */
     --muted-foreground: 0 0% 30%;
     --border: 0 0% 75%;
     --radius: 0.5rem;
@@ -19,11 +23,14 @@
 
   .dark {
     /* MODE FOSC — paleta blava sòbria */
-    --background: 215 40% 16%;          /* #0B2545 Oxford Blue */
+    --background: 215 40% 16%;
+    /* #0B2545 Oxford Blue */
     --foreground: 220 20% 98%;
-    --primary: 207 44% 30%;             /* #134074 Yale Blue */
+    --primary: 207 44% 30%;
+    /* #134074 Yale Blue */
     --primary-foreground: 0 0% 100%;
-    --card: 216 36% 18%;                /* #13315C Berkeley Blue */
+    --card: 216 36% 18%;
+    /* #13315C Berkeley Blue */
     --card-foreground: 220 20% 95%;
     --muted: 212 30% 25%;
     --muted-foreground: 210 20% 85%;
@@ -56,18 +63,16 @@
   .card {
     @apply bg-card text-card-foreground p-6 rounded-xl shadow-lg;
   }
-}
 
-@layer utilities {
-  .dark body {
-    background: linear-gradient(135deg, #0B2545, #134074); /* fosc: Oxford → Yale */
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-  }
-
+  /* index.css */
   body:not(.dark) {
-    background: linear-gradient(135deg, #D7D9D7, #BAACBD); /* clar: Platinum → Rose Quartz */
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+    background: linear-gradient(135deg, #D7D9D7, #BABCBD);
+    /* ... */
   }
+
+  .dark body {
+    background: linear-gradient(135deg, #0B2545, #134074);
+    /* ... */
+  }
+
 }
