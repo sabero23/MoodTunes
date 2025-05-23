@@ -52,18 +52,8 @@ export default function StandardPage() {
     >
       <div className="w-full max-w-md bg-white dark:bg-neutral-900 p-8 rounded-2xl shadow-xl space-y-6">
         <div className="text-center">
-          <img
-            src="/logo_moodtunes_blue.svg"
-            alt="MoodTunes"
-            className="w-16 mx-auto mb-2 dark:hidden"
-          />
-          <img
-            src="/logo_moodtunes_white.svg"
-            alt="MoodTunes"
-            className="w-16 mx-auto mb-2 hidden dark:block"
-          />
           <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">
-            Benvingut,{" "}
+            Benvingut/da,{" "}
             <span className="text-blue-600 dark:text-blue-400">
               {nombre}
             </span>

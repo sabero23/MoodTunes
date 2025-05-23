@@ -27,14 +27,15 @@ export default function Header() {
     setNom(localStorage.getItem("nom") || "");
   }, []);
 
+  // tanca el menú si fas clic fora
   useEffect(() => {
-    const onClickOutside = (e) => {
+    const handler = (e) => {
       if (open && menuRef.current && !menuRef.current.contains(e.target)) {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
   const toggleTheme = () => {
@@ -52,15 +53,9 @@ export default function Header() {
     nav(path);
   };
 
-  const logo = isDark
-    ? "/logo_moodtunes_white.svg"
-    : "/logo_moodtunes_blue.svg";
-
-  // helpers
+  const logoSrc = "/logo_moodtunes_blue.png";
   const txt = isDark ? "text-white" : "text-black";
-  const hoverBg = isDark
-    ? "hover:bg-gray-800/30"
-    : "hover:bg-gray-200/50";
+  const hoverBg = isDark ? "hover:bg-gray-800/30" : "hover:bg-gray-200/50";
 
   return (
     <header
@@ -69,7 +64,12 @@ export default function Header() {
                   ${isDark ? "bg-black" : "bg-white"}`}
     >
       <div className="flex items-center gap-3">
-        <img src={logo} alt="MoodTunes" className="h-8 w-auto" />
+        <img
+          src={logoSrc}
+          alt="MoodTunes"
+          className="h-8 w-auto"
+          style={isDark ? { filter: "invert(1)" } : {}}
+        />
         <span className={`font-semibold text-xl ${txt}`}>MoodTunes</span>
       </div>
 
@@ -115,7 +115,8 @@ export default function Header() {
                 <Shield size={16} /> Panell d’Admin
               </button>
             )}
-            {(rol === "premium" || rol === "standard") && (
+
+            {(rol === "standard" || rol === "premium") && (
               <>
                 <button
                   onClick={() => goTo(`/${rol}`)}
@@ -135,14 +136,18 @@ export default function Header() {
                 >
                   <List size={16} /> Les meves playlists
                 </button>
-                <button
-                  onClick={() => goTo("/reproductor")}
-                  className={`flex items-center gap-2 px-4 py-3 bg-transparent ${hoverBg} ${txt} transition`}
-                >
-                  <PlayCircle size={16} /> Reproductor
-                </button>
+
+                {rol === "premium" && (
+                  <button
+                    onClick={() => goTo("/reproductor")}
+                    className={`flex items-center gap-2 px-4 py-3 bg-transparent ${hoverBg} ${txt} transition`}
+                  >
+                    <PlayCircle size={16} /> Reproductor
+                  </button>
+                )}
               </>
             )}
+
             <button
               onClick={logout}
               className="mt-1 flex items-center gap-2 px-4 py-3 

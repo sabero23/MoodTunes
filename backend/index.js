@@ -15,9 +15,9 @@ app.use(cors());
 app.use(express.json());
 
 const pool = mysql.createPool({
-  host:     process.env.DB_HOST,
-  port:     process.env.DB_PORT,
-  user:     process.env.DB_USER,
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 });
@@ -87,8 +87,8 @@ app.get('/auth/spotify', (req, res) => {
   if (!email) return res.status(400).json({ error: 'Email no proporcionado' });
   const scope = [
     'user-read-private', 'user-read-email',
-    'streaming','user-modify-playback-state','user-read-playback-state',
-    'user-top-read','user-read-recently-played'
+    'streaming', 'user-modify-playback-state', 'user-read-playback-state',
+    'user-top-read', 'user-read-recently-played'
   ].join(' ');
   const redirectUri = encodeURIComponent(process.env.SPOTIFY_REDIRECT_URI);
   const url = `https://accounts.spotify.com/authorize` +
@@ -122,7 +122,7 @@ app.get('/callback', async (req, res) => {
     if (tokens.error) return res.status(400).json({ error: tokens.error_description });
 
     // guardar refresh token y perfil
-    const access_token  = tokens.access_token;
+    const access_token = tokens.access_token;
     const refresh_token = tokens.refresh_token;
     const profileRes = await fetch('https://api.spotify.com/v1/me', {
       headers: { Authorization: `Bearer ${access_token}` }
@@ -152,7 +152,7 @@ app.post('/api/estat', authRequired, async (req, res) => {
   const userId = req.user.id;
   const { estat } = req.body;
   const opcions = [
-    'muy_mal','mal','algo_mal','normal','bien','muy_bien','motivado'
+    'muy_mal', 'mal', 'algo_mal', 'normal', 'bien', 'muy_bien', 'motivado'
   ];
   if (!opcions.includes(estat)) {
     return res.status(400).json({ error: 'Estat d’ànim no vàlid' });
@@ -180,11 +180,11 @@ function shuffle(arr) {
 
 // buckets según audio-features
 const moodBuckets = {
-  muy_mal:  f => f.valence <= 0.2 && f.energy <= 0.2,
-  mal:      f => f.valence <= 0.4 && f.energy <= 0.4,
+  muy_mal: f => f.valence <= 0.2 && f.energy <= 0.2,
+  mal: f => f.valence <= 0.4 && f.energy <= 0.4,
   algo_mal: f => f.valence <= 0.5,
-  normal:   f => f.valence > 0.4 && f.valence <= 0.6,
-  bien:     f => f.valence >= 0.6 && f.energy >= 0.5,
+  normal: f => f.valence > 0.4 && f.valence <= 0.6,
+  bien: f => f.valence >= 0.6 && f.energy >= 0.5,
   muy_bien: f => f.valence >= 0.8 && f.energy >= 0.7,
   motivado: f => f.energy >= 0.7 && f.tempo >= 100
 };
@@ -214,17 +214,17 @@ app.get('/api/recomanacions', authRequired, async (req, res) => {
 
     // 4) Map de filtres segons l’estat
     const moodToAudio = {
-      muy_mal:  { max_valence: 0.2, max_energy: 0.2 },
-      mal:      { max_valence: 0.3, max_energy: 0.4 },
+      muy_mal: { max_valence: 0.2, max_energy: 0.2 },
+      mal: { max_valence: 0.3, max_energy: 0.4 },
       algo_mal: { max_valence: 0.4, max_energy: 0.5 },
-      normal:   { min_valence: 0.4, max_valence: 0.6 },
-      bien:     { min_valence: 0.6, min_energy: 0.5 },
+      normal: { min_valence: 0.4, max_valence: 0.6 },
+      bien: { min_valence: 0.6, min_energy: 0.5 },
       muy_bien: { min_valence: 0.8, min_energy: 0.6 },
       motivado: { min_energy: 0.7, min_tempo: 100 },
     };
     const audioParams = moodToAudio[estat] || {};
     const featureString = Object.entries(audioParams)
-      .map(([k,v]) => `&${k}=${v}`)
+      .map(([k, v]) => `&${k}=${v}`)
       .join('');
 
     // 5) Construcció de l’URL a l’API de Spotify
@@ -251,10 +251,19 @@ app.get('/api/recomanacions', authRequired, async (req, res) => {
         for (const t of tracks) {
           await pool.query(
             `INSERT INTO recomanacions
-               (user_id, estat_anim, canco_id, nom_canco, artista)
-             VALUES (?, ?, ?, ?, ?)`,
-            [userId, estat, t.id, t.name, t.artists[0]?.name || 'Desconegut']
+     (user_id, estat_anim, canco_id, nom_canco, artista, preview, image)
+   VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              userId,
+              estat,
+              t.id,
+              t.name,
+              t.artists[0]?.name || 'Desconegut',
+              t.preview_url || null,
+              (t.album?.images?.[0]?.url) || null
+            ]
           );
+
         }
         return res.json({ recomanacions: tracks });
       }
@@ -263,11 +272,11 @@ app.get('/api/recomanacions', authRequired, async (req, res) => {
 
     // 7) Fallback: cerca per gènere
     const moodToGenre = {
-      muy_mal:  'sad',
-      mal:      'emo',
+      muy_mal: 'sad',
+      mal: 'emo',
       algo_mal: 'acoustic',
-      normal:   'pop',
-      bien:     'dance',
+      normal: 'pop',
+      bien: 'dance',
       muy_bien: 'happy',
       motivado: 'work-out',
     };
@@ -302,6 +311,109 @@ app.get('/api/recomanacions', authRequired, async (req, res) => {
       error: 'No s’han pogut obtenir recomanacions',
       details: err.message
     });
+  }
+});
+
+// ————— RUTES DE PLAYLISTS —————
+
+// Crear una nova playlist
+app.post('/playlists', authRequired, async (req, res) => {
+  const userId = req.user.id;
+  const { nom, descripcio } = req.body;
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO playlists (user_id, nom, descripcio) VALUES (?, ?, ?)',
+      [userId, nom, descripcio]
+    );
+    res.status(201).json({ id: result.insertId, nom, descripcio });
+  } catch (err) {
+    res.status(500).json({ error: 'Error creant playlist', detalles: err.message });
+  }
+});
+
+// Llista de playlists de l’usuari
+app.get('/playlists', authRequired, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const [playlists] = await pool.query(
+      'SELECT id, nom, descripcio, created_at FROM playlists WHERE user_id = ?',
+      [userId]
+    );
+    res.json({ playlists });
+  } catch (err) {
+    res.status(500).json({ error: 'Error carregant playlists', detalles: err.message });
+  }
+});
+
+// Detall d’una playlist + les seves cançons
+app.get('/playlists/:id', authRequired, async (req, res) => {
+  const userId = req.user.id;
+  const playlistId = req.params.id;
+  try {
+    const [[playlist]] = await pool.query(
+      'SELECT id, nom, descripcio, created_at FROM playlists WHERE id = ? AND user_id = ?',
+      [playlistId, userId]
+    );
+    if (!playlist) return res.status(404).json({ error: 'Playlist no trobada' });
+
+    const [items] = await pool.query(
+      `SELECT pi.canco_id, pi.inserted_at,
+              r.nom_canco AS name, r.artista AS artist, r.preview AS preview, r.image AS image
+         FROM playlist_items pi
+         LEFT JOIN recomanacions r ON r.canco_id = pi.canco_id
+        WHERE pi.playlist_id = ?
+        ORDER BY pi.inserted_at DESC`,
+      [playlistId]
+    );
+    res.json({ playlist, items });
+  } catch (err) {
+    res.status(500).json({ error: 'Error carregant playlist', detalles: err.message });
+  }
+});
+
+// Eliminar una playlist
+app.delete('/playlists/:id', authRequired, async (req, res) => {
+  const userId = req.user.id;
+  const playlistId = req.params.id;
+  try {
+    const [result] = await pool.query(
+      'DELETE FROM playlists WHERE id = ? AND user_id = ?',
+      [playlistId, userId]
+    );
+    if (result.affectedRows === 0)
+      return res.status(404).json({ error: 'Playlist no trobada o no permès' });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Error eliminant playlist', detalles: err.message });
+  }
+});
+
+// **Afegir una cançó a una playlist**  ← Aquí és clau que es cridi a `/items`
+app.post('/playlists/:id/items', authRequired, async (req, res) => {
+  const userId     = req.user.id;
+  const playlistId = req.params.id;
+  const { canco_id, nom_canco, artista, preview, image } = req.body;
+
+  try {
+    // 1) Comprueba que la playlist es del usuario
+    const [[pl]] = await pool.query(
+      'SELECT id FROM playlists WHERE id = ? AND user_id = ?',
+      [playlistId, userId]
+    );
+    if (!pl) return res.status(404).json({ error: 'Playlist no trobada' });
+
+    // 2) Inserta la canción con toda su info
+    await pool.query(
+      `INSERT INTO playlist_items
+         (playlist_id, canco_id, nom_canco, artista, preview, image)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [playlistId, canco_id, nom_canco, artista, preview || null, image || null]
+    );
+
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error afegint cançó', detalles: err.message });
   }
 });
 

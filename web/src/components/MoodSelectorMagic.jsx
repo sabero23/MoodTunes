@@ -1,5 +1,5 @@
 // src/components/MoodSelectorMagic.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../components/ui/button";
@@ -17,8 +17,22 @@ const moods = [
 
 export default function MoodSelectorMagic() {
   const [selectedIndex, setSelectedIndex] = useState(3); // per defecte "Normal"
+  const [isDark, setIsDark] = useState(false);
   const navigate = useNavigate();
   const selectedMood = moods[selectedIndex];
+
+  // Detectem tema
+  useEffect(() => {
+    const cls = document.documentElement.classList;
+    setIsDark(cls.contains("dark"));
+    const observer = new MutationObserver(() => {
+      setIsDark(cls.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  const textColor = isDark ? "text-white" : "text-black";
 
   const handleNext = async () => {
     const token = localStorage.getItem("token");
@@ -56,7 +70,7 @@ export default function MoodSelectorMagic() {
 
   return (
     <div className="w-full max-w-md mx-auto text-center p-6">
-      <h2 className="text-xl font-semibold mb-6 text-white">
+      <h2 className={`text-xl font-semibold mb-6 ${textColor}`}>
         ¿Cómo te has sentido en general hoy?
       </h2>
 
@@ -78,7 +92,9 @@ export default function MoodSelectorMagic() {
         />
       </div>
 
-      <div className="text-lg font-bold text-white mb-4">{selectedMood.label}</div>
+      <div className={`text-lg font-bold mb-4 ${textColor}`}>
+        {selectedMood.label}
+      </div>
 
       <div className="w-full mb-6">
         <input
@@ -89,9 +105,9 @@ export default function MoodSelectorMagic() {
           onChange={(e) => setSelectedIndex(parseInt(e.target.value))}
           className="w-full accent-blue-500"
         />
-        <div className="flex justify-between text-sm text-white text-opacity-70 mt-2">
-          <span>{moods[0].label}</span>
-          <span>{moods[moods.length - 1].label}</span>
+        <div className="flex justify-between text-sm mb-2">
+          <span className={textColor}>{moods[0].label}</span>
+          <span className={textColor}>{moods[moods.length - 1].label}</span>
         </div>
       </div>
 

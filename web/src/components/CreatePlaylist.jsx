@@ -1,25 +1,14 @@
+// src/components/CreatePlaylist.jsx
 import { useState } from "react";
+import { toast } from "react-toastify";
 
-function CreatePlaylist({ onCreated }) {
+export default function CreatePlaylist({ onCreated }) {
   const [nom, setNom] = useState("");
   const [descripcio, setDescripcio] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validació bàsica
-    if (!nom.trim()) {
-      alert("❌ El nom de la playlist és obligatori");
-      return;
-    }
-
     const token = localStorage.getItem("token");
-
-    if (!token) {
-      alert("No s'ha trobat cap token. Torna a iniciar sessió.");
-      return;
-    }
-
     try {
       const res = await fetch("http://localhost:4000/playlists", {
         method: "POST",
@@ -29,44 +18,37 @@ function CreatePlaylist({ onCreated }) {
         },
         body: JSON.stringify({ nom, descripcio }),
       });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        alert("✅ Playlist creada!");
-        setNom("");
-        setDescripcio("");
-        if (onCreated) onCreated(); // refresca llistat si ve de props
-      } else {
-        alert(data.error || "❌ Error al crear la playlist");
-      }
-    } catch (err) {
-      console.error("❌ Error en la petició:", err);
-      alert("Error de connexió amb el servidor.");
+      if (!res.ok) throw new Error();
+      toast.success("✅ Playlist creada!");
+      setNom("");
+      setDescripcio("");
+      onCreated();  // refresca la llista
+    } catch {
+      toast.error("❌ Error creant playlist");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: "1.5rem" }}>
-      <h3>Nova Playlist</h3>
+    <form onSubmit={handleSubmit} className="space-y-4">
       <input
-        type="text"
-        placeholder="Nom"
         value={nom}
         onChange={(e) => setNom(e.target.value)}
+        placeholder="Nom de la playlist"
+        className="w-full px-3 py-2 border rounded"
         required
-        style={{ display: "block", marginBottom: "0.5rem" }}
       />
-      <input
-        type="text"
-        placeholder="Descripció (opcional)"
+      <textarea
         value={descripcio}
         onChange={(e) => setDescripcio(e.target.value)}
-        style={{ display: "block", marginBottom: "0.5rem" }}
+        placeholder="Descripció (opcional)"
+        className="w-full px-3 py-2 border rounded"
       />
-      <button type="submit">Crear</button>
+      <button
+        type="submit"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+      >
+        Crear Playlist
+      </button>
     </form>
   );
 }
-
-export default CreatePlaylist;
